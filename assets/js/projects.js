@@ -12,7 +12,7 @@ let render_projects = (slug) => {
     let projects_obj = [
         {
             image: 'assets/images/MAE 4190: Fast Robots.jpg',
-            link: 'labs/lab1.html',
+            link: 'labs/lab1',
             title: 'MAE 4190: Fast Robots',
             description: "Classwork and Labs for MAE 4190: Fast Robots",
             technologies: [],

@@ -240,6 +240,7 @@
 </code></pre>
 
       <h3>Task 4</h3>
+      <p>In this task I set up a notification handler for time data transmissions. The handler uses the ble.start_notify(ble.uuid['RX_STRING'], notification_handler) command to recieve BLE GATT characteristic changes then output them as print statements.</p>
       <pre class="code-python"><code>
 <span class="comment"># notification handler</span>
 <span class="kw">def</span> notification_handler(uuid, data):
@@ -362,7 +363,7 @@ ble.start_notify(ble.uuid[<span class="str">'RX_STRING'</span>], notification_ha
     <section id="references">
       <h2>References</h2>
       <p>
-        For this lab, I referenced the student pages of Kotie Ashie and Jack Long for help with Tasks 4–7 of Lab 1b.
+        For this lab, I referenced the student pages of Kotie Ashie and Jack Long for help with Tasks of Lab 1b.
         I also used AI for syntax checking and troubleshooting.
       </p>
     </section>

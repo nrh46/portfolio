@@ -15,6 +15,8 @@ let render_projects = (slug) => {
             link: 'labs/lab1.html',
             title: 'MAE 4190: Fast Robots',
             description: "Classwork and Labs for MAE 4190: Fast Robots",
+            technologies: [],
+            categories: ['featured']
         },
     ]
 

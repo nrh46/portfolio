@@ -76,19 +76,38 @@
             <h3>Task 1</h3>
             <p>I was able to connect the Artemis board to my computer vie Bluetooth.</p>
             <h3>Task 2</h3>
-            <p></p>
+            <img src="assets/blink.jpg" alt="blink">
+            <p>I uploaded and ran the example file Blink in 0.1Basics. The blue LED on the Artemis blinked.</p>
             <h3>Task 3</h3>
-            <p></p>
+            <img src="assets/task3.jpg" alt="Echo">
+            <p>I uploaded and ran the example file Example4_Serial in Apollo3. The Artemis board successfully output serial inputs.</p>
             <h3>Task 4</h3>
-            <p></p>
+            <p>I uploaded and ran the example file Example2_analogRead in Apollo3 for testing the temperature sensor of the Artemis board. To test it, I blew on the sensor to create varied outputs.</p>
             <h3>Task 5</h3>
-            <p></p>
+            <p>I uploaded and ran the example file Example1_MicrophoneOutput in PDM to test the Artemis board microphone. To test it, I attempted to hold a couple of notes using my voice, and the board, inconsistently, was able to output those frequencies.</p>
         </section>
         
         <section id="lab-1b">
             <h2>1b</h2>
             <h3>Task 1</h3>
             <p></p>
+            <pre><code>
+                case ECHO:
+
+                char char_arr[MAX_MSG_SIZE];
+
+                // Extract the next value from the command string as a character array
+                success = robot_cmd.get_next_value(char_arr);
+                if (!success)
+                    return;
+                    tx_estring_value.clear();
+                    tx_estring_value.append("Robot says -> ");
+                    tx_estring_value.append(char_arr);
+                    tx_estring_value.append(":)");
+                    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+
+                break;
+            </code></pre>
             <h3>Task 2</h3>
             <p></p>
             <h3>Task 3</h3>

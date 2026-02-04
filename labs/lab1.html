@@ -74,16 +74,18 @@
         <section id="lab-1a">
             <h2>1a</h2>
             <h3>Task 1</h3>
-            <p>I was able to connect the Artemis board to my computer vie Bluetooth.</p>
+            <p>I was able to connect the Artemis board to my computer via Bluetooth.</p>
             <h3>Task 2</h3>
-            <img src="assets/images/blink.jpg" alt="blink">
+            <img src="../assets/images/blink.jpg" alt="blink">
             <p>I uploaded and ran the example file Blink in 0.1Basics. The blue LED on the Artemis blinked.</p>
             <h3>Task 3</h3>
-            <img src="assets/images/task3.jpg" alt="Echo">
+            <img src="../assets/images/task3.jpg" alt="Echo">
             <p>I uploaded and ran the example file Example4_Serial in Apollo3. The Artemis board successfully output serial inputs.</p>
             <h3>Task 4</h3>
+            <img src="../assets/images/task4.jpg" alt="Temperature Sensor">
             <p>I uploaded and ran the example file Example2_analogRead in Apollo3 for testing the temperature sensor of the Artemis board. To test it, I blew on the sensor to create varied outputs.</p>
             <h3>Task 5</h3>
+            <img src="../assets/images/task5.jpg" alt="Microphone Output">
             <p>I uploaded and ran the example file Example1_MicrophoneOutput in PDM to test the Artemis board microphone. To test it, I attempted to hold a couple of notes using my voice, and the board, inconsistently, was able to output those frequencies.</p>
         </section>
         
@@ -173,17 +175,59 @@
             </code></pre>
             <h3>Task 5</h3>
             <p>For this task I wrote a loop in python which runs the GET_TIME_MILLIS command 100 times. The data was transmitted to my computer every 57-66 milliseconds, which equates to 15-17 transmissions per second.</p>
-            <img src="assets/images/lab1bTask5.jpg" alt="Task5">
+            <img src="../assets/images/lab1bTask5.jpg" alt="Task5">
             <h3>Task 6</h3>
-            <p></p>
+            <p>In task 6 I created the SEND_TIME_DATA case in the Arduino sketch to record time data 100 times in a global array timeArray then send the time data to my computer. To do this I two for loops, the first to collect and insert the data into the array, and the second to send the data to the computer piecewise.</p>
+            <pre><code> 
+                case SEND_TIME_DATA:
+                    for (int i=0; i<100; i++){
+                        int Millis;
+                        Millis = (int)millis();
+                        timeArray[i] = Millis;
+                    }
+                    for (int i=0; i<100; i++){
+                        tx_estring_value.clear();
+                        tx_estring_value.append("T:");
+                        tx_estring_value.append(timeArray[i]);
+                        tx_characteristic_string.writeValue(tx_estring_value.c_str());
+                        delay(10);
+                        Serial.println(timeArray[i]);
+                    }
+                break;
+            </code></pre>
             <h3>Task 7</h3>
-            <p></p>
+            <p>In this task I implemented the GET_TEMP_READINGS command in the arduino sketch to send temperature and time readings. To do this I made two for loops, the first filling in the two global arrays to store temperature and time data 100 times, and the second to send those arraye piecewise to the computer. I also adjusted my notification handler to take in the new data stream.</p>
+            <pre><code> 
+                case GET_TEMP_READINGS:
+                    for (int i=0;i<100;i++){
+                        int current;
+                        int temp;
+                        current = (int)millis();
+                        temptime[i] = current;
+                        temp = (float)getTempDegF();
+                        tempArray[i] = temp;
+                        }
+                    for (int i=0;i<100;i++){
+                        tx_estring_value.clear();
+                        tx_estring_value.append("Time:");
+                        tx_estring_value.append(temptime[i]);
+                        tx_estring_value.append("-");
+                        tx_estring_value.append("Temp:");
+                        tx_estring_value.append(tempArray[i]);
+                        tx_characteristic_string.writeValue(tx_estring_value.c_str());
+                        delay(10);
+                        Serial.println(tempArray[i]);
+                    }
+                break;
+            </code></pre>
             <h3>Task 8</h3>
-            <p></p>
+            <p>The first method of recording timestamp data, looping data transmission using the GET_TIME_MILLIS command, recorded data significantlly slower than the second method. However, the continual transmission of data allows for real time updating. This particular advantage is exasterbated by the fact that the transmisions occur more quickly using the first method. That makes the first method more ideal for real time feedback instead of rapid collection of data.</p>
+            <p>On the other hand, the data from the second method allows for better accuracy. Due to the rapid collection of many data points the second method is superior for tasks such as building a picture of the motion or temperature of the chip over time. The second method is able to record and store data</p>
+            <p>Considering that the sketch takes up about 31kb of data as is, there is roughly 363kb of dynamic memory left to store data. Consid</p>
         </section>
         
         <section id="collaboration">
-            <h2>Collaboration/References</h2>
+            <h2>References</h2>
             <p>For this lab, I referenced the Student Pages of Kotie Ashie and Jack Long for help with parts 4-7 of lab 1b. I also used some AI to check syntax and troubleshoot.</p>
         </section>
     </main>

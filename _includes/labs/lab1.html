@@ -110,12 +110,70 @@
             </code></pre>
             <h3>Task 2</h3>
             <p></p>
+            <pre><code>
+                case SEND_THREE_FLOATS:
+                float flt_A, flt_B, flt_C;
+                success = robot_cmd.get_next_value(flt_A);
+                if (!success)
+                    return;
+                success = robot_cmd.get_next_value(flt_B);
+                if (!success)
+                    return;
+                success = robot_cmd.get_next_value(flt_C);
+                if (!success)
+                    return;
+                Serial.print("Three Floats:");
+                Serial.print(flt_A);
+                Serial.print(",");
+                Serial.print(flt_B);
+                Serial.print(",");
+                Serial.println(flt_C);
+                break;
+            </code></pre>
             <h3>Task 3</h3>
             <p></p>
+            <pre><code>
+                case GET_TIME_MILLIS:
+                    int time;
+                    time= (int)millis(); /* set the integer value*/
+                    tx_estring_value.clear();
+                    tx_estring_value.append("T:");
+                    tx_estring_value.append(time);
+                    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+
+                break;
             <h3>Task 4</h3>
             <p></p>
+            <pre><code>
+                # notification handler
+                def notification_handler(uuid, data):
+
+                    #make the data into a string
+                    received_string = ble.bytearray_to_string(data)
+                    # just output the time value
+                    key_value_pairs = dict(pair.split(":") for pair in received_string.split(","))
+                    # Get time value
+                    time_value = key_value_pairs.get("T", "Time not found")
+                    print(f"Time value: {time_value}")
+                ble.start_notify(ble.uuid['RX_STRING'], notification_handler)  
+            </code></pre>
+            <p>Then, for part 7 I modified the notification handler to take in both temperature and time data.</p> 
+            <pre><code>
+                def notification_handler2(uuid, data):
+
+                    #make the data into a string
+                    received = ble.bytearray_to_string(data)
+                    # just output the time value
+                    value_pairs = dict(pair.split(":") for pair in received.split("-"))
+                    # Get time value
+                    time_value = value_pairs.get("Time", "Time not found")
+                    temp_value = value_pairs.get("Temp", "Temp not found")
+                    print(f"Time value: {time_value}")
+                    print(f"Temp value: {temp_value}")
+            </code></pre>
             <h3>Task 5</h3>
-            <p></p>
+            <p>For this task I wrote a loop in python which runs the GET_TIME_MILLIS command 100 times. The data was transmitted to my computer every 57-66 milliseconds, which equates to 15-17 transmissions per second. </p>
+            <img src="assets/lab1bTask5.jpg" alt="Task5">
             <h3>Task 6</h3>
             <p></p>
             <h3>Task 7</h3>

@@ -1,239 +1,375 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab 1 - MAE 4190: Fast Robots</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f5f5f5;
-        }
-        
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 2rem;
-            text-align: center;
-        }
-        
-        header h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-        
-        main {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-        
-        section {
-            background-color: white;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        section h2 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 0.5rem;
-        }
-        
-        footer {
-            text-align: center;
-            padding: 1rem;
-            color: #666;
-            font-size: 0.9rem;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 1 - MAE 4190: Fast Robots</title>
+
+  <style>
+    /* -------------------- Base / Reset -------------------- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+
+      /* Make sure long content wraps instead of going offscreen */
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    /* Ensure media never causes horizontal overflow */
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    /* -------------------- Layout -------------------- */
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    header p { font-size: 1.1rem; opacity: 0.92; }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background-color: #fff;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+
+    section h3 {
+      margin-top: 1.25rem;
+      margin-bottom: 0.35rem;
+      color: #2c3e50;
+    }
+
+    p { margin: 0.5rem 0 0.75rem; }
+
+    /* -------------------- Images -------------------- */
+    .lab-image {
+      width: 100%;
+      max-width: 720px;     /* keeps images from looking huge on wide screens */
+      margin: 0.75rem auto 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    /* -------------------- Code Blocks (Black Box + Color) -------------------- */
+    pre {
+      margin: 0.75rem 0 1.25rem;
+      padding: 1rem 1rem;
+      background: #0b0f14;              /* near-black */
+      border: 2px solid #000;           /* black box border */
+      border-radius: 10px;
+      overflow-x: auto;                 /* allow horizontal scroll for long code */
+      max-width: 100%;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #e6edf3;                   /* readable on dark background */
+      white-space: pre;                 /* keep formatting */
+    }
+
+    /* Simple “good enough” syntax highlighting without JS libs */
+    /* Comments */
+    .code-arduino .comment,
+    .code-python  .comment { color: #7ee787; }
+
+    /* Keywords */
+    .code-arduino .kw { color: #ff7b72; font-weight: 600; }
+    .code-python  .kw { color: #ff7b72; font-weight: 600; }
+
+    /* Types / builtins */
+    .code-arduino .type { color: #79c0ff; }
+    .code-python  .bi   { color: #79c0ff; }
+
+    /* Strings / numbers */
+    .code-arduino .str,
+    .code-python  .str { color: #a5d6ff; }
+    .code-arduino .num,
+    .code-python  .num { color: #d2a8ff; }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem 1rem 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    /* Optional: slightly tighter on small screens */
+    @media (max-width: 600px) {
+      section { padding: 1.25rem; }
+      header { padding: 1.5rem 1rem; }
+    }
+  </style>
 </head>
+
 <body>
-    <header>
-        <h1>Lab 1</h1>
-        <p>MAE 4190: Fast Robots</p>
-    </header>
-    
-    <main>
-        <section id="lab-1a">
-            <h2>1a</h2>
-            <h3>Task 1</h3>
-            <p>I was able to connect the Artemis board to my computer via Bluetooth.</p>
-            <h3>Task 2</h3>
-            <img src="../assets/images/blink.jpg" alt="blink">
-            <p>I uploaded and ran the example file Blink in 0.1Basics. The blue LED on the Artemis blinked.</p>
-            <h3>Task 3</h3>
-            <img src="../assets/images/task3.jpg" alt="Echo">
-            <p>I uploaded and ran the example file Example4_Serial in Apollo3. The Artemis board successfully output serial inputs.</p>
-            <h3>Task 4</h3>
-            <img src="../assets/images/task4.jpg" alt="Temperature Sensor">
-            <p>I uploaded and ran the example file Example2_analogRead in Apollo3 for testing the temperature sensor of the Artemis board. To test it, I blew on the sensor to create varied outputs.</p>
-            <h3>Task 5</h3>
-            <img src="../assets/images/task5.jpg" alt="Microphone Output">
-            <p>I uploaded and ran the example file Example1_MicrophoneOutput in PDM to test the Artemis board microphone. To test it, I attempted to hold a couple of notes using my voice, and the board, inconsistently, was able to output those frequencies.</p>
-        </section>
-        
-        <section id="lab-1b">
-            <h2>1b</h2>
-            <h3>Task 1</h3>
-            <p></p>
-            <pre>In this task, I sent a string from my computer to the Artemis board using the ECHO command, which then output the string in the arduino sketch.<code>
-                case ECHO:
+  <header>
+    <h1>Lab 1</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
 
-                char char_arr[MAX_MSG_SIZE];
+  <main>
+    <section id="lab-1a">
+      <h2>1a</h2>
 
-                // Extract the next value from the command string as a character array
-                success = robot_cmd.get_next_value(char_arr);
-                if (!success)
-                    return;
-                    tx_estring_value.clear();
-                    tx_estring_value.append("Robot says -> ");
-                    tx_estring_value.append(char_arr);
-                    tx_estring_value.append(":)");
-                    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+      <h3>Task 1</h3>
+      <p>I was able to connect the Artemis board to my computer via Bluetooth.</p>
 
-                break;
-            </code></pre>
-            <h3>Task 2</h3>
-            <p>In this task I filled in the SEND_THREE_FLOATS case in the Arduino code to output the three floats input by my computer in the output of the arduino sketch.</p>
-            <pre><code>
-                case SEND_THREE_FLOATS:
-                float flt_A, flt_B, flt_C;
-                success = robot_cmd.get_next_value(flt_A);
-                if (!success)
-                    return;
-                success = robot_cmd.get_next_value(flt_B);
-                if (!success)
-                    return;
-                success = robot_cmd.get_next_value(flt_C);
-                if (!success)
-                    return;
-                Serial.print("Three Floats:");
-                Serial.print(flt_A);
-                Serial.print(",");
-                Serial.print(flt_B);
-                Serial.print(",");
-                Serial.println(flt_C);
-                break;
-            </code></pre>
-            <h3>Task 3</h3>
-            <p>In this task I filled in the GET_TIME_MILLIS case in the Arduino code to send the computer a string starting with T: indicating the time in milliseconds.</p>
-            <pre><code>
-                case GET_TIME_MILLIS:
-                    int time;
-                    time= (int)millis(); /* set the integer value*/
-                    tx_estring_value.clear();
-                    tx_estring_value.append("T:");
-                    tx_estring_value.append(time);
-                    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+      <h3>Task 2</h3>
+      <img class="lab-image" src="../assets/images/blink.jpg" alt="Blink example running on Artemis" />
+      <p>I uploaded and ran the example file <em>Blink</em> in <em>0.1Basics</em>. The blue LED on the Artemis blinked.</p>
 
-                break;
-            <h3>Task 4</h3>
-            <p></p>
-            <pre><code>
-                # notification handler
-                def notification_handler(uuid, data):
+      <h3>Task 3</h3>
+      <img class="lab-image" src="../assets/images/task3.jpg" alt="Serial echo output" />
+      <p>I uploaded and ran the example file <em>Example4_Serial</em> in <em>Apollo3</em>. The Artemis board successfully output serial inputs.</p>
 
-                    #make the data into a string
-                    received_string = ble.bytearray_to_string(data)
-                    # just output the time value
-                    key_value_pairs = dict(pair.split(":") for pair in received_string.split(","))
-                    # Get time value
-                    time_value = key_value_pairs.get("T", "Time not found")
-                    print(f"Time value: {time_value}")
-                ble.start_notify(ble.uuid['RX_STRING'], notification_handler)  
-            </code></pre>
-            <p>Then, for part 7 I modified the notification handler to take in both temperature and time data.</p> 
-            <pre><code>
-                def notification_handler2(uuid, data):
+      <h3>Task 4</h3>
+      <img class="lab-image" src="../assets/images/task4.jpg" alt="Temperature sensor output" />
+      <p>
+        I uploaded and ran the example file <em>Example2_analogRead</em> in <em>Apollo3</em> to test the Artemis temperature sensor.
+        To test it, I blew on the sensor to create varied outputs.
+      </p>
 
-                    #make the data into a string
-                    received = ble.bytearray_to_string(data)
-                    # just output the time value
-                    value_pairs = dict(pair.split(":") for pair in received.split("-"))
-                    # Get time value
-                    time_value = value_pairs.get("Time", "Time not found")
-                    temp_value = value_pairs.get("Temp", "Temp not found")
-                    print(f"Time value: {time_value}")
-                    print(f"Temp value: {temp_value}")
-            </code></pre>
-            <h3>Task 5</h3>
-            <p>For this task I wrote a loop in python which runs the GET_TIME_MILLIS command 100 times. The data was transmitted to my computer every 57-66 milliseconds, which equates to 15-17 transmissions per second.</p>
-            <img src="../assets/images/lab1bTask5.jpg" alt="Task5">
-            <h3>Task 6</h3>
-            <p>In task 6 I created the SEND_TIME_DATA case in the Arduino sketch to record time data 100 times in a global array timeArray then send the time data to my computer. To do this I two for loops, the first to collect and insert the data into the array, and the second to send the data to the computer piecewise.</p>
-            <pre><code> 
-                case SEND_TIME_DATA:
-                    for (int i=0; i<100; i++){
-                        int Millis;
-                        Millis = (int)millis();
-                        timeArray[i] = Millis;
-                    }
-                    for (int i=0; i<100; i++){
-                        tx_estring_value.clear();
-                        tx_estring_value.append("T:");
-                        tx_estring_value.append(timeArray[i]);
-                        tx_characteristic_string.writeValue(tx_estring_value.c_str());
-                        delay(10);
-                        Serial.println(timeArray[i]);
-                    }
-                break;
-            </code></pre>
-            <h3>Task 7</h3>
-            <p>In this task I implemented the GET_TEMP_READINGS command in the arduino sketch to send temperature and time readings. To do this I made two for loops, the first filling in the two global arrays to store temperature and time data 100 times, and the second to send those arraye piecewise to the computer. I also adjusted my notification handler to take in the new data stream.</p>
-            <pre><code> 
-                case GET_TEMP_READINGS:
-                    for (int i=0;i<100;i++){
-                        int current;
-                        int temp;
-                        current = (int)millis();
-                        temptime[i] = current;
-                        temp = (float)getTempDegF();
-                        tempArray[i] = temp;
-                        }
-                    for (int i=0;i<100;i++){
-                        tx_estring_value.clear();
-                        tx_estring_value.append("Time:");
-                        tx_estring_value.append(temptime[i]);
-                        tx_estring_value.append("-");
-                        tx_estring_value.append("Temp:");
-                        tx_estring_value.append(tempArray[i]);
-                        tx_characteristic_string.writeValue(tx_estring_value.c_str());
-                        delay(10);
-                        Serial.println(tempArray[i]);
-                    }
-                break;
-            </code></pre>
-            <h3>Task 8</h3>
-            <p>The first method of recording timestamp data, looping data transmission using the GET_TIME_MILLIS command, recorded data significantlly slower than the second method. However, the continual transmission of data allows for real time updating. This particular advantage is exasterbated by the fact that the transmisions occur more quickly using the first method. That makes the first method more ideal for real time feedback instead of rapid collection of data.</p>
-            <p>On the other hand, the data from the second method allows for better accuracy. Due to the rapid collection of many data points the second method is superior for tasks such as building a picture of the motion or temperature of the chip over time. The second method is able to record and store data</p>
-            <p>Considering that the sketch takes up about 31kb of data as is, there is roughly 363kb of dynamic memory left to store data. Consid</p>
-        </section>
-        
-        <section id="collaboration">
-            <h2>References</h2>
-            <p>For this lab, I referenced the Student Pages of Kotie Ashie and Jack Long for help with parts 4-7 of lab 1b. I also used some AI to check syntax and troubleshoot.</p>
-        </section>
-    </main>
-    
-    <footer>
-        <p>&copy; Spring 2026 Lab 1 - MAE 4190: Fast Robots</p>
-    </footer>
+      <h3>Task 5</h3>
+      <img class="lab-image" src="../assets/images/task5.jpg" alt="Microphone frequency output" />
+      <p>
+        I uploaded and ran the example file <em>Example1_MicrophoneOutput</em> in <em>PDM</em> to test the Artemis board microphone.
+        To test it, I tried to hold a couple of notes using my voice. The board was able to output those frequencies, but inconsistently.
+      </p>
+    </section>
+
+    <section id="lab-1b">
+      <h2>1b</h2>
+
+      <h3>Task 1</h3>
+      <p>
+        In this task, I sent a string from my computer to the Artemis board using the <strong>ECHO</strong> command. The board then
+        returned the string in the Arduino sketch output.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="kw">case</span> <span class="type">ECHO</span>:
+
+  <span class="type">char</span> char_arr[MAX_MSG_SIZE];
+
+  <span class="comment">// Extract the next value from the command string as a character array</span>
+  success = robot_cmd.get_next_value(char_arr);
+  <span class="kw">if</span> (!success)
+    <span class="kw">return</span>;
+
+  tx_estring_value.clear();
+  tx_estring_value.append(<span class="str">"Robot says -&gt; "</span>);
+  tx_estring_value.append(char_arr);
+  tx_estring_value.append(<span class="str">":)"</span>);
+  tx_characteristic_string.writeValue(tx_estring_value.c_str());
+
+  <span class="kw">break</span>;
+</code></pre>
+
+      <h3>Task 2</h3>
+      <p>
+        In this task, I filled in the <strong>SEND_THREE_FLOATS</strong> case in the Arduino code to print the three float values
+        sent from my computer.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="kw">case</span> <span class="type">SEND_THREE_FLOATS</span>:
+  <span class="type">float</span> flt_A, flt_B, flt_C;
+
+  success = robot_cmd.get_next_value(flt_A);
+  <span class="kw">if</span> (!success) <span class="kw">return</span>;
+
+  success = robot_cmd.get_next_value(flt_B);
+  <span class="kw">if</span> (!success) <span class="kw">return</span>;
+
+  success = robot_cmd.get_next_value(flt_C);
+  <span class="kw">if</span> (!success) <span class="kw">return</span>;
+
+  Serial.print(<span class="str">"Three Floats: "</span>);
+  Serial.print(flt_A);
+  Serial.print(<span class="str">","</span>);
+  Serial.print(flt_B);
+  Serial.print(<span class="str">","</span>);
+  Serial.println(flt_C);
+
+  <span class="kw">break</span>;
+</code></pre>
+
+      <h3>Task 3</h3>
+      <p>
+        In this task, I filled in the <strong>GET_TIME_MILLIS</strong> case in the Arduino code to send the computer a string starting
+        with <strong>T:</strong> indicating the current time in milliseconds.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="kw">case</span> <span class="type">GET_TIME_MILLIS</span>:
+  <span class="type">int</span> time;
+  time = (<span class="type">int</span>)millis();
+
+  tx_estring_value.clear();
+  tx_estring_value.append(<span class="str">"T:"</span>);
+  tx_estring_value.append(time);
+  tx_characteristic_string.writeValue(tx_estring_value.c_str());
+
+  <span class="kw">break</span>;
+</code></pre>
+
+      <h3>Task 4</h3>
+      <pre class="code-python"><code>
+<span class="comment"># notification handler</span>
+<span class="kw">def</span> notification_handler(uuid, data):
+
+  <span class="comment"># make the data into a string</span>
+  received_string = ble.bytearray_to_string(data)
+
+  <span class="comment"># parse key:value pairs</span>
+  key_value_pairs = <span class="bi">dict</span>(pair.split(<span class="str">":"</span>) <span class="kw">for</span> pair <span class="kw">in</span> received_string.split(<span class="str">","</span>))
+
+  <span class="comment"># get time value</span>
+  time_value = key_value_pairs.get(<span class="str">"T"</span>, <span class="str">"Time not found"</span>)
+  <span class="bi">print</span>(<span class="str">f"Time value: {time_value}"</span>)
+
+ble.start_notify(ble.uuid[<span class="str">'RX_STRING'</span>], notification_handler)
+</code></pre>
+
+      <p>Then, for part 7, I modified the notification handler to read both temperature and time data.</p>
+
+      <pre class="code-python"><code>
+<span class="kw">def</span> notification_handler2(uuid, data):
+
+  <span class="comment"># make the data into a string</span>
+  received = ble.bytearray_to_string(data)
+
+  <span class="comment"># parse Time:...-Temp:...</span>
+  value_pairs = <span class="bi">dict</span>(pair.split(<span class="str">":"</span>) <span class="kw">for</span> pair <span class="kw">in</span> received.split(<span class="str">"-"</span>))
+
+  time_value = value_pairs.get(<span class="str">"Time"</span>, <span class="str">"Time not found"</span>)
+  temp_value = value_pairs.get(<span class="str">"Temp"</span>, <span class="str">"Temp not found"</span>)
+
+  <span class="bi">print</span>(<span class="str">f"Time value: {time_value}"</span>)
+  <span class="bi">print</span>(<span class="str">f"Temp value: {temp_value}"</span>)
+</code></pre>
+
+      <h3>Task 5</h3>
+      <p>
+        For this task, I wrote a loop in Python that runs the <strong>GET_TIME_MILLIS</strong> command 100 times. The data was
+        transmitted to my computer every 57–66 milliseconds, which is about 15–17 transmissions per second.
+      </p>
+      <img class="lab-image" src="../assets/images/lab1bTask5.jpg" alt="Task 5 timing results" />
+
+      <h3>Task 6</h3>
+      <p>
+        In Task 6, I created the <strong>SEND_TIME_DATA</strong> case in the Arduino sketch to record time data 100 times in a global
+        array (<code>timeArray</code>) and then send it to my computer. I used two <code>for</code> loops: the first to collect and store
+        values, and the second to send the data to the computer piecewise.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="kw">case</span> <span class="type">SEND_TIME_DATA</span>:
+  <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span class="num">100</span>; i++) {
+    <span class="type">int</span> Millis;
+    Millis = (<span class="type">int</span>)millis();
+    timeArray[i] = Millis;
+  }
+
+  <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span class="num">100</span>; i++) {
+    tx_estring_value.clear();
+    tx_estring_value.append(<span class="str">"T:"</span>);
+    tx_estring_value.append(timeArray[i]);
+    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+    delay(<span class="num">10</span>);
+    Serial.println(timeArray[i]);
+  }
+  <span class="kw">break</span>;
+</code></pre>
+
+      <h3>Task 7</h3>
+      <p>
+        In this task, I implemented the <strong>GET_TEMP_READINGS</strong> command in the Arduino sketch to send temperature and time readings.
+        I used two <code>for</code> loops: the first fills two global arrays to store temperature and time data 100 times, and the second sends
+        those arrays piecewise to the computer. I also adjusted my notification handler to handle the new data stream.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="kw">case</span> <span class="type">GET_TEMP_READINGS</span>:
+  <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span class="num">100</span>; i++) {
+    <span class="type">int</span> current;
+    <span class="type">float</span> temp;
+
+    current = (<span class="type">int</span>)millis();
+    temptime[i] = current;
+
+    temp = (<span class="type">float</span>)getTempDegF();
+    tempArray[i] = temp;
+  }
+
+  <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span class="num">100</span>; i++) {
+    tx_estring_value.clear();
+    tx_estring_value.append(<span class="str">"Time:"</span>);
+    tx_estring_value.append(temptime[i]);
+    tx_estring_value.append(<span class="str">"-"</span>);
+    tx_estring_value.append(<span class="str">"Temp:"</span>);
+    tx_estring_value.append(tempArray[i]);
+    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+    delay(<span class="num">10</span>);
+    Serial.println(tempArray[i]);
+  }
+  <span class="kw">break</span>;
+</code></pre>
+
+      <h3>Task 8</h3>
+      <p>
+        The first method of recording timestamp data—looping data transmission using the <strong>GET_TIME_MILLIS</strong> command—recorded
+        data significantly slower than the second method. However, continual transmission enables real-time updates. This advantage is
+        amplified by the fact that transmissions occur more quickly using the first method, making it more suitable for real-time feedback
+        rather than rapid bulk data collection.
+      </p>
+      <p>
+        On the other hand, the second method provides better accuracy for offline analysis. Because it rapidly collects many data points
+        before transmitting, it is better for tasks like building a clear picture of the motion or temperature of the chip over time.
+      </p>
+      <p>
+        Since the sketch takes up about 31 KB of program storage, there is still substantial memory available for buffering additional data,
+        depending on the board’s remaining dynamic memory and any other runtime allocations.
+      </p>
+    </section>
+
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        For this lab, I referenced the student pages of Kotie Ashie and Jack Long for help with Tasks 4–7 of Lab 1b.
+        I also used AI for syntax checking and troubleshooting.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Spring 2026 Lab 1 - MAE 4190: Fast Robots</p>
+  </footer>
 </body>
 </html>

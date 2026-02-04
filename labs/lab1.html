@@ -285,7 +285,7 @@ ble.start_notify(ble.uuid[<span class="str">'RX_STRING'</span>], notification_ha
       <h3>Task 6</h3>
       <p>
         In Task 6, I created the <strong>SEND_TIME_DATA</strong> case in the Arduino sketch to record time data 100 times in a global
-        array (<code>timeArray</code>) and then send it to my computer. I used two <code>for</code> loops: the first to collect and store
+        array (timeArray) and then send it to my computer. I used two for loops: the first to collect and store
         values, and the second to send the data to the computer piecewise.
       </p>
 
@@ -311,7 +311,7 @@ ble.start_notify(ble.uuid[<span class="str">'RX_STRING'</span>], notification_ha
       <h3>Task 7</h3>
       <p>
         In this task, I implemented the <strong>GET_TEMP_READINGS</strong> command in the Arduino sketch to send temperature and time readings.
-        I used two <code>for</code> loops: the first fills two global arrays to store temperature and time data 100 times, and the second sends
+        I used two for loops: the first fills two global arrays to store temperature and time data 100 times, and the second sends
         those arrays piecewise to the computer. I also adjusted my notification handler to handle the new data stream.
       </p>
 

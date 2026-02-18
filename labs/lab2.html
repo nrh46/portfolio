@@ -162,7 +162,13 @@
         <p>The AD0_VAL value sets which I2C address the IMU uses. 
             When the value is set to 1, such as in the example code, the IMU uses the default address of all zeros. 
             When the value is set to 0, the board uses another address, which causes the example code in the IDE to not read the data stream correctly.</p>
-
+        <h3>Acceleration and Gyroscope Data Discussion</h3>
+            <img class="lab-image" src="../assets/images/stationary_IMU.png" alt="IMU Output Example" />
+            <p>From the above image: The Scaled. Acc (mg) values show acceleration along the X, Y, and Z axes in milligravity (1000mg = 1g). The small X and Y readings indicate noise from those sensors, while the 1038 mg in the Z direction shows gravity is mostly aligned with the Z-axis, meaning the board is upright. 
+                The Gyr (DPS) values give angular velocity about each axis in degrees per second, with the very small readings indicating almost no rotation or likely sensor noise.</p>
+            <p>Below is an example of output while the IMU is moving:</p>
+            <img class="lab-image" src="../assets/images/IMU_Out_example.png" alt="IMU Output Example" />
+            
     </section>
 
     <!-- -------------------- Accelerometer -------------------- -->

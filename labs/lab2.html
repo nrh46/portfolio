@@ -175,30 +175,36 @@
     <section id="accelerometer">
       <h2>Accelerometer</h2>
 
-      <h3>What I Measured</h3>
-      <p>
-        I logged the accelerometer outputs along the board’s axes. Since the accelerometer measures specific force,
-        I expected to see approximately <strong>1 g</strong> distributed across axes depending on orientation, with small noise.
-      </p>
+        <h3>Pitch and Roll Outputs at {-90, 0, 90} degrees</h3>
+        <h4>Pitch</h4>
+        <img class="lab-image" src="../assets/images/pitch-90.png" alt="Pitch -90 Deg" />
+        <img class="lab-image" src="../assets/images/pitch0.png" alt="Pitch 0 Deg" />
+        <img class="lab-image" src="../assets/images/pitch90.png" alt="Pitch 90 Deg" />
+        <h4>Roll</h4>
+        <img class="lab-image" src="../assets/images/roll-90.png" alt="Roll -90 Deg" />
+        <img class="lab-image" src="../assets/images/roll0.png" alt="Roll 0 Deg" />
+        <img class="lab-image" src="../assets/images/roll90.png" alt="Roll 90 Deg" />
+        <p>The code I used in the arduino IDE is here:</p>
+        <pre class="code-arduino"><code>
+        <span class="type">float</span> pitch;
+        <span class="type">float</span> roll;
 
-      <h3>Quick Validation</h3>
-      <p>
-        To validate sign conventions and axis mapping, I rotated the board slowly and observed the axis that aligned
-        with gravity increase toward ±1 g while the others decreased. This helped confirm which axis corresponded to
-        each physical direction on the board.
-      </p>
+        pitch = atan2(myICM.accX(), myICM.accZ()) * <span class="num">180</span> / M_PI; 
+        roll  = atan2(myICM.accY(), myICM.accZ()) * <span class="num">180</span> / M_PI;
 
-      <pre class="code-arduino"><code>
-<span class="comment">// Example accelerometer print (replace with your variables)</span>
-Serial.print(<span class="str">"ACC,"</span>);
-Serial.print(ax); Serial.print(<span class="str">","</span>);
-Serial.print(ay); Serial.print(<span class="str">","</span>);
-Serial.println(az);</code></pre>
+        SERIAL_PORT.print(pitch);
+        SERIAL_PORT.print(<span class="str">","</span>);
+        SERIAL_PORT.println(roll);
+        </code></pre>
 
-      <p>
-        <em>Image placeholder:</em> include a plot or screenshot of accel data (e.g., gravity showing up on one axis).
-      </p>
-      <!-- <img class="lab-image" src="../assets/images/lab2_accel_plot.jpg" alt="Accelerometer sample plot" /> -->
+        <h3>Accuracy Observations</h3>
+        <p>
+            The pitch and roll outputs were generally accurate at the tested angles, showing close values near -90, 0, and 90 degrees. 
+            However, there was significant noise in the readings especially when considering the -90 or 90 degree positions for both pitch and roll.  
+            This noise leads the data to be very imprecise despite being generally accurate, which could influence later positional calculations.
+        </p>
+
+        <code class="code-arduino"><pre><code>
     </section>
 
     <!-- -------------------- Gyroscope -------------------- -->

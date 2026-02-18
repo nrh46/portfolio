@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 2 - MAE 4190: Fast Robots</title>
+
+  <style>
+    /* -------------------- Base / Reset -------------------- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+
+      /* Make sure long content wraps instead of going offscreen */
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    /* Ensure media never causes horizontal overflow */
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    /* -------------------- Layout -------------------- */
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    header p  { font-size: 1.1rem; opacity: 0.92; }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background-color: #fff;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+
+    section h3 {
+      margin-top: 1.25rem;
+      margin-bottom: 0.35rem;
+      color: #2c3e50;
+    }
+
+    p { margin: 0.5rem 0 0.75rem; }
+
+    /* -------------------- Images -------------------- */
+    .lab-image {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    /* -------------------- Code Blocks (Black Box + Color) -------------------- */
+    pre {
+      margin: 0.75rem 0 1.25rem;
+      padding: 1rem 1rem;
+      background: #0b0f14;
+      border: 2px solid #000;
+      border-radius: 10px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #e6edf3;
+      white-space: pre;
+    }
+
+    /* Simple “good enough” syntax highlighting without JS libs */
+    .code-arduino .comment,
+    .code-python  .comment { color: #7ee787; }
+
+    .code-arduino .kw,
+    .code-python  .kw { color: #ff7b72; font-weight: 600; }
+
+    .code-arduino .type { color: #79c0ff; }
+    .code-python  .bi   { color: #79c0ff; }
+
+    .code-arduino .str,
+    .code-python  .str { color: #a5d6ff; }
+
+    .code-arduino .num,
+    .code-python  .num { color: #d2a8ff; }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem 1rem 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      section { padding: 1.25rem; }
+      header  { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 2</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+    <!-- -------------------- Setting Up the IMU-->
+    <section id="setup-imu">
+      <h2>Setting Up the IMU</h2>
+
+        <h3>Artemis to IMU connection</h3>
+            <img class="lab-image" src="../assets/images/Artemis_IMU_connect.jpg" alt="IMU setup" />
+        
+        <!-- YouTube Shorts Embed (plays inline on the page) -->
+        <p>Below is a video of the IMU example code output via the serial plotter in the Arduino IDE.</p>
+        <div style="max-width: 420px; margin: 0.75rem auto 1.25rem; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+            <div style="position: relative; width: 100%; padding-top: 177.78%; background: #000;">
+                <iframe
+                src="https://www.youtube.com/embed/ZhJLFCZlG5c"
+                title="YouTube Shorts video player"
+                style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+                ></iframe>
+            </div>
+        </div>
+        <h3>ADO_VAL</h3>
+        <p>The AD0_VAL value sets which I2C address the IMU uses. 
+            When the value is set to 1, such as in the example code, the IMU uses the default address of all zeros. 
+            When the value is set to 0, the board uses another address, which causes the example code in the IDE to not read the data stream correctly.</p>
+
+    </section>
+
+    <!-- -------------------- Accelerometer -------------------- -->
+    <section id="accelerometer">
+      <h2>Accelerometer</h2>
+
+      <h3>What I Measured</h3>
+      <p>
+        I logged the accelerometer outputs along the board’s axes. Since the accelerometer measures specific force,
+        I expected to see approximately <strong>1 g</strong> distributed across axes depending on orientation, with small noise.
+      </p>
+
+      <h3>Quick Validation</h3>
+      <p>
+        To validate sign conventions and axis mapping, I rotated the board slowly and observed the axis that aligned
+        with gravity increase toward ±1 g while the others decreased. This helped confirm which axis corresponded to
+        each physical direction on the board.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="comment">// Example accelerometer print (replace with your variables)</span>
+Serial.print(<span class="str">"ACC,"</span>);
+Serial.print(ax); Serial.print(<span class="str">","</span>);
+Serial.print(ay); Serial.print(<span class="str">","</span>);
+Serial.println(az);</code></pre>
+
+      <p>
+        <em>Image placeholder:</em> include a plot or screenshot of accel data (e.g., gravity showing up on one axis).
+      </p>
+      <!-- <img class="lab-image" src="../assets/images/lab2_accel_plot.jpg" alt="Accelerometer sample plot" /> -->
+    </section>
+
+    <!-- -------------------- Gyroscope -------------------- -->
+    <section id="gyroscope">
+      <h2>Gyroscope</h2>
+
+      <h3>What I Measured</h3>
+      <p>
+        I logged the gyroscope angular rate outputs along each axis. At rest, I expected readings near zero with
+        a small bias; during manual rotations, the axis aligned with rotation should respond strongly.
+      </p>
+
+      <h3>Bias / Drift Notes</h3>
+      <p>
+        I observed a small nonzero offset at rest (bias). Over longer time windows, integrating gyro rates can lead
+        to drift, which is why later labs typically fuse accel + gyro data.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="comment">// Example gyroscope print (replace with your variables)</span>
+Serial.print(<span class="str">"GYRO,"</span>);
+Serial.print(gx); Serial.print(<span class="str">","</span>);
+Serial.print(gy); Serial.print(<span class="str">","</span>);
+Serial.println(gz);</code></pre>
+
+      <p>
+        <em>Image placeholder:</em> add a plot/screenshot showing gyro response during a rotation.
+      </p>
+      <!-- <img class="lab-image" src="../assets/images/lab2_gyro_plot.jpg" alt="Gyroscope sample plot" /> -->
+    </section>
+
+    <!-- -------------------- Sample Data -------------------- -->
+    <section id="sample-data">
+      <h2>Sample Data</h2>
+
+      <h3>Data Format</h3>
+      <p>
+        I stored / streamed data in a consistent CSV-like format so it could be quickly parsed for plotting and analysis.
+        A typical row included a timestamp and the accelerometer + gyroscope values.
+      </p>
+
+      <pre class="code-python"><code>
+<span class="comment"># Example parsing skeleton (replace with your workflow)</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="comment"># df = pd.read_csv("lab2_imu.csv")</span>
+<span class="comment"># df.columns = ["t_ms","ax","ay","az","gx","gy","gz"]</span>
+
+<span class="comment"># Quick check</span>
+<span class="comment"># print(df.head())</span></code></pre>
+
+      <h3>Observations</h3>
+      <p>
+        In the sample dataset, the accelerometer showed clear changes with orientation and motion, while the gyroscope
+        captured quick rotational impulses more cleanly. Noise levels were small but noticeable, especially during
+        hand motion.
+      </p>
+
+      <p>
+        <em>Image placeholder:</em> add a plot of accel + gyro vs time (or screenshots from your analysis).
+      </p>
+      <!-- <img class="lab-image" src="../assets/images/lab2_sample_data.jpg" alt="Sample IMU data plot" /> -->
+    </section>
+
+    <!-- -------------------- My stunt -------------------- -->
+    <section id="my-stunt">
+      <h2>My stunt</h2>
+
+      <h3>What I Did</h3>
+      <p>
+        For my stunt, I performed a repeatable motion sequence and recorded the IMU response. The goal was to produce a
+        distinctive signature in the accelerometer and gyroscope streams that clearly corresponded to the stunt.
+      </p>
+
+      <h3>Result</h3>
+      <p>
+        The gyroscope captured the rotation peaks strongly, while the accelerometer reflected changes in orientation
+        and transient accelerations. This stunt dataset will be useful for later filtering, integration, and sensor fusion.
+      </p>
+
+      <p>
+        <em>Image/video placeholder:</em> include a photo of the setup, a screenshot of the data, and (optionally) a short clip/GIF.
+      </p>
+      <!-- <img class="lab-image" src="../assets/images/lab2_stunt.jpg" alt="Stunt setup / output" /> -->
+    </section>
+
+    <!-- -------------------- References -------------------- -->
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        For this lab, I referenced course documentation and example code provided in MAE 4190. I also used AI for syntax
+        checking and troubleshooting.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 2 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

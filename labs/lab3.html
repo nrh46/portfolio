@@ -187,12 +187,9 @@
 
       <h3>Artemis Scanning for I2C Devices</h3>
       <p>
-        Below is a screenshot of the Artemis scanning for I2C devices. The scan reports 0x29 for the ToF sensor(s), consistent with the
+        The scan reported 0x29 for the ToF sensor, consistent with the
         7-bit I2C address format used by the microcontroller.
       </p>
-      <div class="placeholder" aria-label="I2C scan placeholder">
-        <p>Image placeholder: Arduino Serial Monitor showing I2C scan results with address 0x29</p>
-      </div>
 
       <h3>Sensor Data in Chosen Mode</h3>
       <p>
@@ -286,8 +283,10 @@
       <h3>Speed and Limiting Factor</h3>
       <p>
         The loop executes quickly when it is not blocked by waiting for a measurement. The current limiting factor is the sensor update rate,
-        plus overhead from Serial printing, BLE notification bandwidth, and the intentional delays added to keep the data stream stable.
+        plus overhead from Serial printing, BLE notification bandwidth, and the intentional delays added to keep the data stream stable. Below is the data output from an
+        analysis of the initial TOF_COLLECT loop I wrote, which only sent data when the TOF sensors were ready.
       </p>
+      <img class="lab-image" src="../assets/images/sampling_rate.png" alt="Sampling Rate" />
     </section>
 
     <!-- -------------------- Two ToF Sensors + IMU (BLE Graphs Live Here) -------------------- -->
@@ -322,7 +321,7 @@
       </p>
       <img class="lab-image" src="../assets/images/task10L3IMU.png" alt="Time v Angle IMU" />
 
-      <h3>Parallel Data Capture Evidence</h3>
+      <h3>Parallel Data Capture</h3>
       <p>
         The image below shows the raw Bluetooth output used to generate the plots above, demonstrating that ToF and IMU values were streamed together.
       </p>

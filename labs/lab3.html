@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 3 - MAE 4190: Fast Robots</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    header p  { font-size: 1.1rem; opacity: 0.92; }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background-color: #fff;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+
+    section h3 {
+      margin-top: 1.25rem;
+      margin-bottom: 0.35rem;
+      color: #2c3e50;
+    }
+
+    p { margin: 0.5rem 0 0.75rem; }
+
+    ul { margin: 0.25rem 0 0.75rem 1.25rem; }
+    li { margin: 0.25rem 0; }
+
+    .lab-image {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .placeholder {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 10px;
+      border: 2px dashed rgba(44,62,80,0.35);
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(44,62,80,0.05),
+        rgba(44,62,80,0.05) 10px,
+        rgba(44,62,80,0.08) 10px,
+        rgba(44,62,80,0.08) 20px
+      );
+      padding: 1.25rem;
+      color: #2c3e50;
+      text-align: center;
+    }
+
+    .placeholder p {
+      margin: 0;
+      font-size: 0.98rem;
+      opacity: 0.92;
+    }
+
+    pre {
+      margin: 0.75rem 0 1.25rem;
+      padding: 1rem 1rem;
+      background: #0b0f14;
+      border: 2px solid #000;
+      border-radius: 10px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #e6edf3;
+      white-space: pre;
+    }
+
+    .code-arduino .comment,
+    .code-python  .comment { color: #7ee787; }
+
+    .code-arduino .kw,
+    .code-python  .kw { color: #ff7b72; font-weight: 600; }
+
+    .code-arduino .type { color: #79c0ff; }
+    .code-python  .bi   { color: #79c0ff; }
+
+    .code-arduino .str,
+    .code-python  .str { color: #a5d6ff; }
+
+    .code-arduino .num,
+    .code-python  .num { color: #d2a8ff; }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem 1rem 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      section { padding: 1.25rem; }
+      header  { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 3</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+    <section id="prelab">
+      <h2>Prelab</h2>
+
+      <h3>I2C Address</h3>
+      <p>
+        The ToF sensors show an I2C address of 0x29. The spec sheet often lists 0x52, but that value includes the read/write bit.
+        In practice, the useful 7-bit address is 0x29, and 0x52 is the 8-bit form that is effectively shifted due to the R/W bit.
+      </p>
+
+      <h3>Approach to Using 2 ToF Sensors</h3>
+      <p>
+        I will cycle the two sensors on and off, collecting measurements during the on periods in order to address the sensors separately.
+        To do this, I will create a loop that toggles a shutdown pin so only one sensor is active at a time during address configuration,
+        then I will assign a new I2C address and re-enable the second sensor so both can be read without conflicts.
+      </p>
+
+      <h3>Placement of Sensors and Missed Obstacles</h3>
+      <p>
+        I will use one sensor on the front and one sensor on the side of my robot. This allows forward distance measurement and lateral
+        distance-to-wall measurement during turns. Obstacles can be missed if they are outside the ToF field of view, too low/high relative
+        to the sensor mounting height, very thin, angled to reflect poorly, or temporarily blocked by the chassis during turns.
+      </p>
+
+      <h3>Wiring Diagram Sketch</h3>
+      <div class="placeholder" aria-label="Wiring diagram placeholder">
+        <p>Image placeholder: wiring diagram sketch for Artemis + QWIIC bus + two ToF sensors + shutdown/XSHUT pin</p>
+      </div>
+    </section>
+
+    <section id="tasks">
+      <h2>Lab Tasks</h2>
+
+      <h3>ToF Sensor Connected to QWIIC Breakout Board</h3>
+      <p>
+        Battery connected and charging, QWIIC breakout connected, and soldering completed. Below is a picture of the ToF sensor connected
+        to the QWIIC breakout board on my robot.
+      </p>
+      <div class="placeholder" aria-label="ToF on QWIIC placeholder">
+        <p>Image placeholder: ToF sensor connected to QWIIC breakout board</p>
+      </div>
+
+      <h3>Artemis Scanning for I2C Devices</h3>
+      <p>
+        Below is a screenshot of the Artemis scanning for I2C devices. The scan reports 0x29 for the ToF sensor(s), consistent with the
+        7-bit I2C address format used by the microcontroller.
+      </p>
+      <div class="placeholder" aria-label="I2C scan placeholder">
+        <p>Image placeholder: Arduino Serial Monitor showing I2C scan results with address 0x29</p>
+      </div>
+
+      <h3>Sensor Data in Chosen Mode</h3>
+      <p>
+        I am going with long-range mode in order to be able to best map a room. I sampled up to about 1.5 meters to test accuracy using a
+        ruler or tape measure.
+      </p>
+      <div class="placeholder" aria-label="Long-range data placeholder">
+        <p>Image placeholder: screenshot/plot of ToF distance readings in long-range mode</p>
+      </div>
+    </section>
+
+    <section id="parallel-sensors">
+      <h2>2 ToF Sensors and the IMU</h2>
+
+      <p>
+        I wrote a command COLLECT_TOF to get distances for both ToF sensors using a shutdown pin so the sensors can be addressed separately.
+        I also built a combined data capture command called GET_INFO that records IMU data as fast as possible, records ToF data when available,
+        and outputs NA when ToF data is not ready.
+      </p>
+
+      <h3>Sensors Working in Parallel</h3>
+      <p>
+        Below is a screenshot or video showing the ToF sensors and IMU producing data in parallel.
+      </p>
+      <div class="placeholder" aria-label="Parallel sensors placeholder">
+        <p>Image/video placeholder: ToF + IMU streaming together in Serial Monitor or BLE output</p>
+      </div>
+    </section>
+
+    <section id="tof-speed">
+      <h2>ToF Sensor Speed</h2>
+
+      <p>
+        In future labs, the code must execute quickly, so I cannot let the program hang while it waits for the sensor to finish a measurement.
+        For fast recording, I used if statements to only read a ToF value when the sensor reports that the data is ready. The output includes
+        a time value in milliseconds between recordings, and TOFNB stands for ToF non-blocked.
+      </p>
+
+      <h3>Non-Blocking ToF Logging Code</h3>
+      <pre class="code-arduino"><code>
+<span class="comment">// Non-blocking ToF logging (prints time continuously, prints ToF only when ready)</span>
+tof1.startRanging();
+tof2.startRanging();
+
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span class="num">25</span>; i++) {
+
+  <span class="type">int</span> now_ms = millis();
+
+  Serial.print(<span class="str">"Time(ms): "</span>);
+  Serial.print(now_ms);
+
+  <span class="kw">if</span> (tof1.checkForDataReady()) {
+    <span class="type">int</span> d1 = tof1.getDistance();
+    tof1.clearInterrupt();
+    Serial.print(<span class="str">" TOF1(mm): "</span>);
+    Serial.print(d1);
+  }
+
+  <span class="kw">if</span> (tof2.checkForDataReady()) {
+    <span class="type">int</span> d2 = tof2.getDistance();
+    tof2.clearInterrupt();
+    Serial.print(<span class="str">" TOF2(mm): "</span>);
+    Serial.print(d2);
+  }
+
+  Serial.println();
+  delay(<span class="num">5</span>);
+}
+
+tof1.stopRanging();
+tof2.stopRanging();</code></pre>
+
+      <h3>Speed and Limiting Factor</h3>
+      <p>
+        The loop runs quickly when it is not blocked by waiting for a measurement. The limiting factor is primarily the sensor update rate,
+        plus overhead from Serial printing, BLE notification bandwidth, and any intentional delays added to keep the stream stable.
+      </p>
+    </section>
+
+    <section id="time-distance">
+      <h2>Time v Distance</h2>
+
+      <p>
+        I used continuous recording and graphed distance over time for both ToF sensors using data sent over Bluetooth. When a measurement is
+        not ready, the output logs NA for that sensor.
+      </p>
+
+      <div class="placeholder" aria-label="Time vs Distance placeholder">
+        <p>Image placeholder: time vs distance plot from Bluetooth data for both ToF sensors</p>
+      </div>
+
+      <h3>Bluetooth Data Notes</h3>
+      <p>
+        The packets are formatted consistently so they can be parsed into arrays in Python. For GET_INFO, the messages include a timestamp,
+        roll and pitch from the complementary filter, and ToF readings when available.
+      </p>
+    </section>
+
+    <section id="time-angle">
+      <h2>Time v Angle</h2>
+
+      <p>
+        I used the continuous record approach and adjusted my IMU loop to send over an array of data for a period defined in the send_command
+        statement. I call the new case GET_INFO. In this case, it records IMU data as fast as possible, records ToF data when available, and
+        outputs NA for either sensor when the data is not available. I recorded for 7 seconds, moved the box away, and rolled the IMU sensor
+        to create clear changes in roll and pitch.
+      </p>
+
+      <div class="placeholder" aria-label="Time vs Angle placeholder">
+        <p>Image placeholder: time vs roll/pitch plot from Bluetooth data (complementary filter output)</p>
+      </div>
+    </section>
+
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        For this lab, I worked with Coby Lai when I ran into coding issues. I also used ChatGPT for help with syntax, coding, and page structure.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 3 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

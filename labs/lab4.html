@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 4 - MAE 4190: Fast Robots</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { width: 100%; }
+    body{
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    header{
+      background-color:#2c3e50;
+      color:#fff;
+      padding:2rem 1rem;
+      text-align:center;
+    }
+    header h1{ font-size:2rem; margin-bottom:0.5rem; }
+    header p{ font-size:1.1rem; opacity:0.92; }
+
+    main{
+      max-width:900px;
+      margin:2rem auto;
+      padding:0 1rem;
+    }
+
+    section{
+      background:#fff;
+      padding:2rem;
+      margin-bottom:2rem;
+      border-radius:8px;
+      box-shadow:0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2{
+      color:#2c3e50;
+      margin-bottom:1rem;
+      border-bottom:2px solid #3498db;
+      padding-bottom:0.5rem;
+    }
+
+    section h3{
+      margin-top:1.25rem;
+      margin-bottom:0.35rem;
+      color:#2c3e50;
+    }
+
+    p{ margin:0.5rem 0 0.75rem; }
+    ul{ margin:0.25rem 0 0.75rem 1.25rem; }
+    li{ margin:0.25rem 0; }
+
+    .lab-image{
+      width:100%;
+      max-width:720px;
+      margin:0.75rem auto 1rem;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,0.12);
+      box-shadow:0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .placeholder{
+      width:100%;
+      max-width:720px;
+      margin:0.75rem auto 1rem;
+      border-radius:10px;
+      border:2px dashed rgba(44,62,80,0.35);
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(44,62,80,0.05),
+        rgba(44,62,80,0.05) 10px,
+        rgba(44,62,80,0.08) 10px,
+        rgba(44,62,80,0.08) 20px
+      );
+      padding:1.25rem;
+      color:#2c3e50;
+      text-align:center;
+    }
+    .placeholder p{ margin:0; font-size:0.98rem; opacity:0.92; }
+
+    pre{
+      margin:0.75rem 0 1.25rem;
+      padding:1rem;
+      background:#0b0f14;
+      border:2px solid #000;
+      border-radius:10px;
+      overflow-x:auto;
+      max-width:100%;
+    }
+    code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:0.95rem;
+      line-height:1.55;
+      color:#e6edf3;
+      white-space:pre;
+    }
+
+    .code-arduino .comment { color:#7ee787; }
+    .code-arduino .kw      { color:#ff7b72; font-weight:600; }
+    .code-arduino .type    { color:#79c0ff; }
+    .code-arduino .str     { color:#a5d6ff; }
+    .code-arduino .num     { color:#d2a8ff; }
+
+    /* -------------------- YouTube Embed -------------------- */
+    .yt-wrap{
+      max-width:640px;
+      margin:0.75rem auto 1.25rem;
+      border-radius:12px;
+      overflow:hidden;
+      box-shadow:0 2px 6px rgba(0,0,0,0.12);
+      background:#000;
+    }
+    .yt-aspect{
+      position:relative;
+      width:100%;
+      padding-top:56.25%;
+      background:#000;
+    }
+    .yt-aspect iframe{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    footer{
+      text-align:center;
+      padding:1.25rem 1rem 2rem;
+      color:#666;
+      font-size:0.9rem;
+    }
+    footer a{
+      color:#3498db;
+      text-decoration:none;
+      font-weight:500;
+    }
+    footer a:hover{ text-decoration:underline; }
+
+    @media (max-width:600px){
+      section{ padding:1.25rem; }
+      header{ padding:1.5rem 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 4</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+    <!-- -------------------- Prelab -------------------- -->
+    <section id="prelab">
+      <h2>Prelab</h2>
+
+      <h3>Diagram: Motor Drivers, Artemis, and Battery Connections</h3>
+      <p>
+        This diagram shows my intended wiring between the motor drivers, Artemis, and battery. The diagram includes the specific Artemis pins
+        used for PWM and direction control. I had to ensure that the pins I chose for PWM to the motors were in fact PWM capable, slightly
+        limited my options. The pins I chose allow for the artemis to be positioned such that all the pins for the motor drivers face 
+        the same direction, allowing fo rmore simple wiring and a cleaner layout. 
+      </p>
+      <div class="placeholder" aria-label="Wiring diagram placeholder">
+        <p>Image placeholder: wiring diagram with pin numbers (PWM pins, direction pins, battery to motor driver power, shared ground)</p>
+      </div>
+
+      <h3>Battery Discussion</h3>
+      <p>
+        The Artemis microcontroller and the motors are powered using separate batteries. The Artemis is powered by a 
+        650 mAh battery, while the motors are powered by a 850 mAh battery connected through the motor drivers. 
+        Using separate power sources helps prevent electrical sudden changes in voltage or 
+        current that can occur when the motors start, stop, or change speed. Thus, ensuring that the ARTEMIS is unaffected by
+        these sharp changes. Because the Artemis operates within a limited voltage 
+        range, this voltage drop could cause the microcontroller to reset or shut down unexpectedly. By isolating 
+        the motor power from the logic power, the control electronics remain stable even when the motors draw large 
+        currents. This separation improves reliability and ensures that the Artemis continues running during 
+        rapid motor acceleration. This separaton also allows for more dedicated voltage to be given to the motors, allowing for faster speeds.
+      </p>
+      <div class="placeholder" aria-label="Battery photo placeholder">
+        <p>Image placeholder: battery photo and/or power distribution close-up</p>
+      </div>
+    </section>
+
+    <!-- -------------------- Lab Tasks -------------------- -->
+    <section id="lab-tasks">
+      <h2>Lab Tasks</h2>
+
+      <h3>Setup with Power Supply and Oscilloscope Hookup</h3>
+      <p>
+        Below is a picture of my test setup showing the power supply connections and oscilloscope probe hookup to the motor driver input.
+      </p>
+      <div class="placeholder" aria-label="Setup photo placeholder">
+        <p>Image placeholder: bench setup with power supply, motor driver, Artemis, and oscilloscope probes</p>
+      </div>
+
+      <h3>Power Supply Setting Discussion</h3>
+      <p>
+        For the power supply, the motors can handle between 2.7V and 10.8V, however I set the power supply to 3.7V to 
+        emulate the voltage given by the 850 mAh battery we are using for the motor drivers. This can be seen in 
+        the beginning of the Motor Driver PWM test video.
+      </p>
+
+      <h3>analogWrite Motor Driver Test Code</h3>
+      <p>
+        This code snippet cycles PWM values to test the motor driver response. It was used with the oscilloscope to verify duty cycle and with the wheels
+        to confirm expected behavior across a range of PWM values. To do this I wrote a loop to run through 0 to 255 for PWM values to test the full range.
+      </p>
+
+      <pre class="code-arduino"><code>
+        <span class="comment">// Analog motor driver test code used to verify PWM control</span>
+
+        <span class="kw">#define</span> REVERSE <span class="num">2</span> <span class="comment">// Connected to AIN1 / BIN1</span>
+        <span class="kw">#define</span> PWM <span class="num">3</span>     <span class="comment">// Connected to AIN2 / BIN2</span>
+
+        <span class="type">void</span> setup(){
+        pinMode(REVERSE, OUTPUT);
+        pinMode(PWM, OUTPUT);
+        }
+
+        <span class="type">void</span> loop(){
+
+        <span class="comment">// Set direction HIGH</span>
+        analogWrite(REVERSE, <span class="num">255</span>);
+
+        <span class="comment">// Gradually increase PWM power</span>
+        <span class="kw">for</span>(<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span class="num">255</span>; i = i + <span class="num">1</span>){
+            analogWrite(PWM, i);
+            delay(<span class="num">20</span>);
+    }</code></pre>
+
+      <h3>Oscilloscope</h3>
+      <p>
+        Below is a video of the oscilloscope measurement showing PWM behavior, as well as the code and power supply setup.
+      </p>
+      <div style="max-width: 420px; margin: 0.75rem auto 1.25rem; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+        <div style="position: relative; width: 100%; padding-top: 177.78%; background: #000;">
+            <iframe
+            src="https://www.youtube.com/embed/nY0c2JuinGU"
+            title="YouTube Shorts video player"
+            style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            ></iframe>
+        </div>
+      </div>
+
+      <h3>Wheels Spinning as Expected</h3>
+      <p>
+        Below is a short video showing the wheels spinning as expected during bench testing. This video corresponds to the PWM test code above.
+      </p>
+
+      <div style="max-width: 420px; margin: 0.75rem auto 1.25rem; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+        <div style="position: relative; width: 100%; padding-top: 177.78%; background: #000;">
+            <iframe
+            src="https://www.youtube.com/embed/qtIwLpXjnR0"
+            title="YouTube Shorts video player"
+            style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            ></iframe>
+        </div>
+      </div>
+
+      <h3>Both Wheels Spinning with Battery Power</h3>
+      <p>
+        Below is the video for the wheels spinning under battery power.
+      </p>
+
+      <div style="max-width: 420px; margin: 0.75rem auto 1.25rem; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+        <div style="position: relative; width: 100%; padding-top: 177.78%; background: #000;">
+            <iframe
+            src="https://www.youtube.com/embed/g_tcj-FK1tk"
+            title="YouTube Shorts video player"
+            style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            ></iframe>
+        </div>
+      </div>
+
+      <h3>Components Secured in the Car</h3>
+      <p>
+        Below is a picture of all components secured in the chassis. If parts are difficult to see in the photo, labels are added to clarify
+        component placement.
+      </p>
+      <div class="placeholder" aria-label="Secured components photo placeholder">
+        <p>Image placeholder: robot chassis with all components mounted; add labels if needed</p>
+      </div>
+    </section>
+
+    <!-- -------------------- PWM Lower Limit + Calibration -------------------- -->
+    <section id="pwm-calibration">
+      <h2>Lower Limit PWM and Calibration</h2>
+
+      <h3>Lower Limit PWM Value Discussion</h3>
+      <p>
+        The lower limit of my PWM for the motor drivers is around 47 for the right motor, and 79 for the left motor. 
+        In order to counter this offset, I added a calibration value in later code to allow for consistent motor drive 
+        from both motors, this value adds 32 to the set value only for the left motor.
+      </p>
+
+      <h3>Calibration Demonstration</h3>
+      <p>
+        Below is the video of the car driving roughly straight (there was a small angle to the tape measure).
+      </p>
+
+      <div style="max-width: 420px; margin: 0.75rem auto 1.25rem; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+        <div style="position: relative; width: 100%; padding-top: 177.78%; background: #000;">
+            <iframe
+            src="https://www.youtube.com/embed/scri99XfNqw"
+            title="YouTube Shorts video player"
+            style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            ></iframe>
+        </div>
+      </div>
+    <!-- -------------------- Open Loop Control -------------------- -->
+    <section id="open-loop">
+      <h2>Open Loop Control</h2>
+
+      <h3>Open Loop Code</h3>
+      <p>
+        This section contains the open loop driving code used to move the car.
+      </p>
+      <pre class="code-arduino"><code>
+
+        <span class="kw">#define</span> L_DIR <span class="num">1</span>
+        <span class="kw">#define</span> L_PWM <span class="num">0</span>
+        <span class="kw">#define</span> R_DIR <span class="num">2</span>
+        <span class="kw">#define</span> R_PWM <span class="num">3</span>
+
+        <span class="type">const</span> <span class="type">int</span> pwm_val = <span class="num">50</span>;
+        <span class="type">const</span> <span class="type">int</span> calibration = <span class="num">32</span>;   <span class="comment">// left-side offset</span>
+        <span class="type">const</span> <span class="type">int</span> turn_val = <span class="num">100</span>;
+
+        <span class="type">void</span> setup() {
+
+        pinMode(L_DIR, OUTPUT);
+        pinMode(L_PWM, OUTPUT);
+        pinMode(R_DIR, OUTPUT);
+        pinMode(R_PWM, OUTPUT);
+
+        <span class="comment">// -------- Drive straight forward --------</span>
+        digitalWrite(L_DIR, LOW);
+        digitalWrite(R_DIR, LOW);
+        analogWrite(L_PWM, min(<span class="num">255</span>, pwm_val + calibration));
+        analogWrite(R_PWM, pwm_val);
+        delay(<span class="num">1200</span>);
+
+        <span class="comment">// Stop</span>
+        analogWrite(L_PWM, <span class="num">0</span>);
+        analogWrite(R_PWM, <span class="num">0</span>);
+        digitalWrite(L_DIR, LOW);
+        digitalWrite(R_DIR, LOW);
+        delay(<span class="num">1000</span>);
+
+        <span class="comment">// -------- Turn LEFT (in-place) --------</span>
+        digitalWrite(L_DIR, HIGH);
+        digitalWrite(R_DIR, LOW);
+        analogWrite(L_PWM, min(<span class="num">255</span>, turn_val + calibration));
+        analogWrite(R_PWM, turn_val);
+        delay(<span class="num">500</span>);
+
+        <span class="comment">// Stop</span>
+        analogWrite(L_PWM, <span class="num">0</span>);
+        analogWrite(R_PWM, <span class="num">0</span>);
+        digitalWrite(L_DIR, LOW);
+        digitalWrite(R_DIR, LOW);
+        delay(<span class="num">1000</span>);
+
+        <span class="comment">// -------- Turn RIGHT (in-place) --------</span>
+        digitalWrite(L_DIR, LOW);
+        digitalWrite(R_DIR, HIGH);
+        analogWrite(L_PWM, min(<span class="num">255</span>, turn_val + calibration));
+        analogWrite(R_PWM, turn_val);
+        delay(<span class="num">500</span>);
+
+        <span class="comment">// Stop</span>
+        analogWrite(L_PWM, <span class="num">0</span>);
+        analogWrite(R_PWM, <span class="num">0</span>);
+        digitalWrite(L_DIR, LOW);
+        digitalWrite(R_DIR, LOW);
+        }
+
+        <span class="type">void</span> loop() {}
+        </code></pre>
+
+      <h3>Open Loop Video</h3>
+      <p>
+        Below is a video showing open loop motion and highlights any drift due to mismatch.
+      </p>
+
+      <div style="max-width: 420px; margin: 0.75rem auto 1.25rem; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+        <div style="position: relative; width: 100%; padding-top: 177.78%; background: #000;">
+            <iframe
+            src="https://www.youtube.com/embed/9xP74FY0Ges"
+            title="YouTube Shorts video player"
+            style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            ></iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- -------------------- References -------------------- -->
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        For this lab I worked with Coby Lai extensively, I also referenced the student pages of Aidan Mcnay and Aidan Derocher.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 4 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

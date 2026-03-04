@@ -159,12 +159,15 @@
   <main>
     <section id="prelab">
       <h2>Prelab</h2>
-
+        
       <h3>I2C Address</h3>
       <p>
         The ToF sensors show an I2C address of 0x29. The spec sheet often lists 0x52, but that value includes the read/write bit.
         In practice, the useful 7-bit address is 0x29, and 0x52 is the 8-bit form that is effectively shifted due to the R/W bit.
       </p>
+    
+      <img class="Wiring-Diagram" src="../assets/images/stationary_IMU.png" alt="IMU Output Example" />
+      
 
       <h3>Approach to Using 2 ToF Sensors</h3>
       <p>
@@ -191,12 +194,10 @@
 
       <h3>ToF Sensor Connected to QWIIC Breakout Board</h3>
       <p>
-        Battery connected and charging, QWIIC breakout connected, and soldering completed. Below is a picture of the ToF sensor connected
-        to the QWIIC breakout board on my robot.
+        Below is a picture of the ToF sensor connected
+        to the QWIIC breakout board on my ARTEMIS.
       </p>
-      <div class="placeholder" aria-label="ToF on QWIIC placeholder">
-        <p>Image placeholder: ToF sensor connected to QWIIC breakout board</p>
-      </div>
+      <img class="TOF-to-Breakou" src="../assets/images/TOF_Breakout.jpg" alt="ToF Sensor on QWIIC Breakout" />
 
       <h3>Artemis Scanning for I2C Devices</h3>
       <p>
@@ -210,11 +211,10 @@
       <h3>Sensor Data in Chosen Mode</h3>
       <p>
         I am going with long-range mode in order to be able to best map a room. I sampled up to about 1.5 meters to test accuracy using a
-        ruler or tape measure.
+        tape measure.
       </p>
-      <div class="placeholder" aria-label="Long-range data placeholder">
-        <p>Image placeholder: screenshot/plot of ToF distance readings in long-range mode</p>
-      </div>
+      <img class="Long-Distance-TOF" src="../assets/images/tofactualvmeasured_usethisone.png" alt="Long Range Data" />
+      <img class="TOF-Test" src="../assets/images/TOF_test.jpg" alt="TOF Test" />
     </section>
 
     <section id="parallel-sensors">
@@ -228,11 +228,12 @@
 
       <h3>Sensors Working in Parallel</h3>
       <p>
-        Below is a screenshot or video showing the ToF sensors and IMU producing data in parallel.
+        Below is are screenshota showing the ToF sensors and IMU producing data. The last Image shows the raw data output, showing that they work in parralel. All of the data below was sent over bluetooth.
       </p>
-      <div class="placeholder" aria-label="Parallel sensors placeholder">
-        <p>Image/video placeholder: ToF + IMU streaming together in Serial Monitor or BLE output</p>
-      </div>
+      <img class="Wiring-Diagram" src="../assets/images/task10L3Tof1.png" alt="TOF1 Graph" />
+      <img class="Wiring-Diagram" src="../assets/images/task10L3Tof2.png" alt="TOF2 Graph" />
+      <img class="Wiring-Diagram" src="../assets/images/task10L3IMU.png" alt="IMU Graph" />
+      <img class="Wiring-Diagram" src="../assets/images/proof_of_ble.png" alt="BLE Output" />
     </section>
 
     <section id="tof-speed">
@@ -281,43 +282,10 @@ tof2.stopRanging();</code></pre>
       <h3>Speed and Limiting Factor</h3>
       <p>
         The loop runs quickly when it is not blocked by waiting for a measurement. The limiting factor is primarily the sensor update rate,
-        plus overhead from Serial printing, BLE notification bandwidth, and any intentional delays added to keep the stream stable.
+        and the intentional delays added to keep the data stream stable.
       </p>
     </section>
 
-    <section id="time-distance">
-      <h2>Time v Distance</h2>
-
-      <p>
-        I used continuous recording and graphed distance over time for both ToF sensors using data sent over Bluetooth. When a measurement is
-        not ready, the output logs NA for that sensor.
-      </p>
-
-      <div class="placeholder" aria-label="Time vs Distance placeholder">
-        <p>Image placeholder: time vs distance plot from Bluetooth data for both ToF sensors</p>
-      </div>
-
-      <h3>Bluetooth Data Notes</h3>
-      <p>
-        The packets are formatted consistently so they can be parsed into arrays in Python. For GET_INFO, the messages include a timestamp,
-        roll and pitch from the complementary filter, and ToF readings when available.
-      </p>
-    </section>
-
-    <section id="time-angle">
-      <h2>Time v Angle</h2>
-
-      <p>
-        I used the continuous record approach and adjusted my IMU loop to send over an array of data for a period defined in the send_command
-        statement. I call the new case GET_INFO. In this case, it records IMU data as fast as possible, records ToF data when available, and
-        outputs NA for either sensor when the data is not available. I recorded for 7 seconds, moved the box away, and rolled the IMU sensor
-        to create clear changes in roll and pitch.
-      </p>
-
-      <div class="placeholder" aria-label="Time vs Angle placeholder">
-        <p>Image placeholder: time vs roll/pitch plot from Bluetooth data (complementary filter output)</p>
-      </div>
-    </section>
 
     <section id="references">
       <h2>References</h2>

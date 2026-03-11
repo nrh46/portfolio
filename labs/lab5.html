@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 5 - MAE 4190: Fast Robots</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; }
+    body{
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    header{
+      background-color:#2c3e50;
+      color:#fff;
+      padding:2rem 1rem;
+      text-align:center;
+    }
+    header h1{ font-size:2rem; margin-bottom:0.5rem; }
+    header p{ font-size:1.1rem; opacity:0.92; }
+
+    main{
+      max-width:900px;
+      margin:2rem auto;
+      padding:0 1rem;
+    }
+
+    section{
+      background:#fff;
+      padding:2rem;
+      margin-bottom:2rem;
+      border-radius:8px;
+      box-shadow:0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2{
+      color:#2c3e50;
+      margin-bottom:1rem;
+      border-bottom:2px solid #3498db;
+      padding-bottom:0.5rem;
+    }
+
+    section h3{
+      margin-top:1.25rem;
+      margin-bottom:0.35rem;
+      color:#2c3e50;
+    }
+
+    p{ margin:0.5rem 0 0.75rem; }
+    ul{ margin:0.25rem 0 0.75rem 1.25rem; }
+    li{ margin:0.25rem 0; }
+
+    .lab-image{
+      width:100%;
+      max-width:720px;
+      margin:0.75rem auto 1rem;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,0.12);
+      box-shadow:0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .placeholder{
+      width:100%;
+      max-width:720px;
+      margin:0.75rem auto 1rem;
+      border-radius:10px;
+      border:2px dashed rgba(44,62,80,0.35);
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(44,62,80,0.05),
+        rgba(44,62,80,0.05) 10px,
+        rgba(44,62,80,0.08) 10px,
+        rgba(44,62,80,0.08) 20px
+      );
+      padding:1.25rem;
+      color:#2c3e50;
+      text-align:center;
+    }
+    .placeholder p{ margin:0; font-size:0.98rem; opacity:0.92; }
+
+    pre{
+      margin:0.75rem 0 1.25rem;
+      padding:1rem;
+      background:#0b0f14;
+      border:2px solid #000;
+      border-radius:10px;
+      overflow-x:auto;
+      max-width:100%;
+    }
+    code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:0.95rem;
+      line-height:1.55;
+      color:#e6edf3;
+      white-space:pre;
+    }
+
+    .code-arduino .comment { color:#7ee787; }
+    .code-arduino .kw      { color:#ff7b72; font-weight:600; }
+    .code-arduino .type    { color:#79c0ff; }
+    .code-arduino .str     { color:#a5d6ff; }
+    .code-arduino .num     { color:#d2a8ff; }
+
+    .code-python .comment { color:#7ee787; }
+    .code-python .kw      { color:#ff7b72; font-weight:600; }
+    .code-python .type    { color:#79c0ff; }
+    .code-python .str     { color:#a5d6ff; }
+    .code-python .num     { color:#d2a8ff; }
+
+    .yt-wrap{
+      max-width:640px;
+      margin:0.75rem auto 1.25rem;
+      border-radius:12px;
+      overflow:hidden;
+      box-shadow:0 2px 6px rgba(0,0,0,0.12);
+      background:#000;
+    }
+    .yt-aspect{
+      position:relative;
+      width:100%;
+      padding-top:56.25%;
+      background:#000;
+    }
+    .yt-aspect iframe{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    footer{
+      text-align:center;
+      padding:1.25rem 1rem 2rem;
+      color:#666;
+      font-size:0.9rem;
+    }
+    footer a{
+      color:#3498db;
+      text-decoration:none;
+      font-weight:500;
+    }
+    footer a:hover{ text-decoration:underline; }
+
+    @media (max-width:600px){
+      section{ padding:1.25rem; }
+      header{ padding:1.5rem 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 5 Linear PID Control</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+    <!-- -------------------- Prelab -------------------- -->
+    <section id="prelab">
+      <h2>Prelab</h2>
+
+      <h3>Bluetooth Communication Architecture</h3>
+      <p>
+        The primary objective of my prelab was to make a clean communication structure between the Artemis and the host computer so that control commands and logged sensor data could be exchanged reliably over Bluetooth. Commands were sent from Python to the Artemis in compact delimited formats, while the robot returned logged sensor and controller data after each run. This was especially important for closed-loop control because the controller gains, setpoint, ToF measurements, estimated error, and motor input all needed to be recorded and visualized after each test.
+      </p>
+      <p>
+        On the embedded side, the BLE command parser was configured to read input values using the RobotCommand class. This made it possible to send structured commands such as controller gains and setpoints using a single characteristic write. This greatly simplified test iteration during the hueristic testing stage.On the Python side, notification handlers were written to receive, parse, and store returned values in arrays for plotting and later saving my final tests for future use during lab 7. This communication structure formed the basis of the P, PD, and PID controller experiments described later on this page.
+      </p>
+
+      <h3>PID Data Send Loop</h3>
+      <p>I wrote the following loop in the PID function of my arduino code to send over Bluetooth at the end of each PID test run.</p>
+    <pre class="code-arduino"><code>
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; pid_log_count; i++) {
+    tx_estring_value.clear();
+    tx_estring_value.append(<span class="str">"PID:"</span>);
+    tx_estring_value.append(pid_time_ms_array[i]);
+    tx_estring_value.append(<span class="str">","</span>);
+    tx_estring_value.append(pid_setpoint_array[i]);
+    tx_estring_value.append(<span class="str">","</span>);
+    tx_estring_value.append(pid_error_array[i]);
+    tx_estring_value.append(<span class="str">","</span>);
+    tx_estring_value.append(pid_pwm_array[i]);
+    tx_estring_value.append(<span class="str">","</span>);
+    tx_estring_value.append(pid_tof_array[i]);
+    tx_estring_value.append(<span class="str">","</span>);
+    tx_estring_value.append(kp);
+    tx_estring_value.append(<span class="str">","</span>);
+    tx_estring_value.append(kd);
+    tx_estring_value.append(<span class="str">","</span>);
+    tx_estring_value.append(ki);
+
+    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+    delay(<span class="num">10</span>);
+}
+</code></pre>
+      <h3>Drive Code Redo</h3>
+      <p>
+        To simplify the main BLE Arduino file, I moved the core motion functions into a separate car.h class. This allowed the main control file to call higher-level functions such as car.fwd(), car.back(), and the turning methods without repeating low-level motor driver code in each command case. This made the motion control portion of the lab substantially cleaner and easier to debug while integrating feedback control.
+      </p>
+    </section>
+
+    <!-- -------------------- Lab Tasks -------------------- -->
+    <section id="lab-tasks">
+      <h2>Lab Tasks</h2>
+
+      <h3>Range and Sampling Time Discussion</h3>
+      <p>
+        The front ToF sensor sampled at approximately 10 Hz during controller operation, and the PID loop was able to work significantly faster though at almost 100Hz. I did this by replecating the code from my COLLECT_TOF_CONT case, which allowed for continual collection of data using an if statement. This sampling rate was fast enough to support distance regulation for the speeds used in this lab, but still coarse enough that some care had to be taken when computing derivative action and when extrapolating between valid ToF measurements. Because the sensor did not update on every loop iteration, I added extrapolation logic to continue estimating the current state between real ToF updates using previously logged values of error.
+      </p>
+      <p>
+        This sampling limitation influenced controller design directly. A proportional controller remained quite manageable at 10 Hz, but the derivative term required more care because differencing early samples or differencing over very small effective intervals could produce a large transient spike. This issue became especially noticeable between the first and second polls of a run when the extrapolation calculated a zero derivative.
+      </p>
+
+      <h3>Controller Logging Strategy</h3>
+      <p>
+        For each controller run, I initialized global arrays to record time, setpoint, error, PWM command, and ToF values. When the run ended, a loop iterated through those arrays and transmitted the stored data back to the computer over BLE. This approach kept the controller self-contained on the robot during runtime while still producing complete logs for analysis afterward. I also added a bit of logic which allowed for an external bluetooth command STOP_PID to end the while loop and start the sending of data. This made it possible for me to let the robot rest then to disturb it and observe the response. Some of the setup code and the case I used in arduino are below.
+      </p>
+      <pre class="code-arduino"><code>
+        <span class="kw">while</span> (pid_active &amp;&amp; !pid_stop_requested) {
+            BLE.poll();
+
+            <span class="kw">if</span> (rx_characteristic_string.written()) {
+                robot_cmd.set_cmd_string(rx_characteristic_string.value(),
+                                        rx_characteristic_string.valueLength());
+
+                <span class="type">int</span> inner_cmd = <span class="num">-1</span>;
+                <span class="kw">if</span> (robot_cmd.get_command_type(inner_cmd)) {
+                    <span class="kw">if</span> (inner_cmd == STOP_PID) {
+                        pid_stop_requested = <span class="kw">true</span>;
+                        pid_active = <span class="kw">false</span>;
+                        car.kill();
+                        <span class="kw">break</span>;
+                    }
+                }
+            }
+        }
+        </code></pre>
+        <pre class="code-arduino"><code>
+            <span class="kw">case</span> STOP_PID: {
+                pid_stop_requested = <span class="kw">true</span>;
+                pid_active = <span class="kw">false</span>;
+                car.kill();
+                Serial.println(<span class="str">"STOP_PID received"</span>);
+                <span class="kw">break</span>;
+            }
+        </code></pre>
+
+    <!--P / PD / PID Discussion-->
+    <section id="controller-design">
+      <h2>P / I / D Controller Design</h2>
+
+      <h3>Initial Proportional Controller</h3>
+      <p>
+        I began with a proportional-only controller. My initial proportional gain estimate was chosen from the desired relationship between a proportional error of 1, proportional error = (tof reading - setpoint)/setpoint, and commanded PWM. Specifically, I wanted a proportional error of approximately 1 to correspond to a motor input near 75 PWM, so I used an initial guess of KP = 75. For initial safety testing on the physical robot, I reduced this slightly to KP = 70. The proportional controller multiplied the normalized error by the gain and then converted the result to a commanded PWM input. Positive error produced a forward command, while negative error caused the robot to back up.
+      </p>
+      <p>
+        I also bounded the controller output with practical motor-drive limits. For large errors, I capped the PWM at 90 so that the robot would not accelerate aggressively into a wall. For moderate errors, I imposed a minimum command around 35 PWM whenever the error too small, since values below that range were typically insufficient to overcome friction and move the chassis. This produced a controllable and physically safe first implementation. The code for which is below.
+      </p>
+      <pre class="code-arduino"><code>
+        <span class="type">float</span> control = kp * abs_error;
+        <span class="type">int</span> pwm_val = (<span class="type">int</span>)control;
+
+        <span class="kw">if</span> (abs_error &gt; <span class="num">1.5f</span>) {
+            pwm_val = <span class="num">80</span>;
+        } <span class="kw">else</span> {
+            <span class="kw">if</span> (pwm_val &gt; <span class="num">80</span>) pwm_val = <span class="num">80</span>;
+            <span class="kw">if</span> (pwm_val &lt; <span class="num">35</span> &amp;&amp; abs_error &gt; <span class="num">0.05f</span>) pwm_val = <span class="num">35</span>;
+            <span class="kw">if</span> (abs_error &lt; <span class="num">0.05f</span>) pwm_val = <span class="num">0</span>;
+        }
+
+        <span class="kw">if</span> (pwm_val == <span class="num">0</span>) {
+            car.kill();
+            signed_pwm = <span class="num">0</span>;
+        } <span class="kw">else</span> <span class="kw">if</span> (error &gt; <span class="num">0.0f</span>) {
+            car.fwd(control_step_ms, pwm_val);
+            signed_pwm = pwm_val;
+        } <span class="kw">else</span> {
+            car.back(control_step_ms, pwm_val);
+            signed_pwm = -pwm_val;
+        }
+     </code></pre>
+      <h3>Proportional Control Video</h3>
+      <p>
+        Below is a proportional control demonstration. This was the first controller that was verified to work reliably on the robot.
+      </p>
+      <div style="max-width: 420px; margin: 0.75rem auto 1.25rem; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+        <div style="position: relative; width: 100%; padding-top: 177.78%; background: #000;">
+          <iframe
+            src="https://youtube.com/shorts/r80YTfg2o-0"
+            title="YouTube Shorts video player"
+            style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+
+      <h3>Derivative Term and PD Testing</h3>
+      <p>
+        After validating proportional control, I extended the controller to include derivative action primarily to confirm that the derivative term was behaving as expected. The derivative component contributes control effort in response to the rate of change of error, so it is most useful during transient response and when responding to purturbations. In practice, I also implemented extrapolation between valid ToF readings by using the difference in time and the recent change in response to estimate how the error was changing between tof readings. This improved responsiveness when the sensor had not yet produced a fresh reading.
+      </p>
+
+      <h3>Integral Term and Final PID Controller</h3>
+      <p>
+        I then implemented a PID controller. The integral term accumulates error over time and multiplies that accumulated value by KI, which helps eliminate steady state offset by centering the response on the desired setpoint. I tuned the final controller using heuristic method 2 discussed in class. The final gain set that produced the best overall behavior was:
+      </p>
+      <ul>
+        <li><strong>K<sub>P</sub> = 70</strong></li>
+        <li><strong>K<sub>D</sub> = 0.02</strong></li>
+        <li><strong>K<sub>I</sub> = 2</strong></li>
+      </ul>
+      <p>
+        These values provided a reasonable balance between responsiveness and settling. The proportional term produced the primary control response, the derivative term damped transient response, and the integral term reduced steady-state error. My implementation at this stage did not include explicit windup protection for integral accumulation, but it was sufficient to demonstrate the use of the full PID controller on my robot.
+      </p>
+    </section>
+
+    <!-- -------------------- Code -------------------- -->
+    <section id="code">
+      <h2>Representative Code</h2>
+
+      <h3>Bluetooth-Based PID Command Structure</h3>
+      <p>
+        The PID controller was implemented as a Bluetooth command case that accepted a setpoint and controller gains from Python. The loop remained active until a separate stop command was received, allowing me to perturb the robot during a run and observe whether the controller would recover after the initial transient.
+      </p>
+    <pre class="code-arduino"><code>
+        <span class="type">int</span> now_ms = millis();
+
+        <span class="type">float</span> dt_control = (now_ms - last_control_ms) / <span class="num">1000.0f</span>;
+
+        <span class="type">float</span> error = pid_last_error;
+        <span class="type">float</span> derivative = <span class="num">0.0f</span>;
+        <span class="type">int</span> signed_pwm = pid_last_pwm;
+        <span class="type">int</span> tof_value = pid_last_tof;
+
+        <span class="comment">// ToF update</span>
+        <span class="kw">if</span> (tof1.checkForDataReady()) {
+            <span class="type">int</span> distance = tof1.getDistance();
+            tof1.clearInterrupt();
+
+            tof_value = distance;
+            error = ((<span class="type">float</span>)distance - (<span class="type">float</span>)setpoint) / (<span class="type">float</span>)setpoint;
+
+            <span class="kw">if</span> (pid_log_count &gt;= <span class="num">1</span>) {
+                <span class="type">float</span> last_error = pid_error_array[pid_log_count - <span class="num">1</span>];
+                derivative = (error - last_error) / dt_control;
+            }
+        } <span class="comment">// get error values to predict new error</span>
+        <span class="kw">else</span> {
+            <span class="kw">if</span> (pid_log_count &gt;= <span class="num">2</span>) {
+                <span class="type">float</span> last_error = pid_error_array[pid_log_count - <span class="num">1</span>];
+                <span class="type">float</span> prev_error = pid_error_array[pid_log_count - <span class="num">2</span>];
+
+                <span class="type">int</span> last_time = pid_time_ms_array[pid_log_count - <span class="num">1</span>];
+                <span class="type">int</span> prev_time = pid_time_ms_array[pid_log_count - <span class="num">2</span>];
+
+                <span class="type">float</span> dt_err = (last_time - prev_time) / <span class="num">1000.0f</span>;
+                <span class="kw">if</span> (dt_err &gt; <span class="num">0.0f</span>) {
+                    <span class="type">float</span> error_rate = (last_error - prev_error) / dt_err;
+                    <span class="type">float</span> dt_since_last = (now_ms - last_time) / <span class="num">1000.0f</span>;
+
+                    error = last_error + error_rate * dt_since_last;
+                    derivative = error_rate;
+                    tof_value = pid_tof_array[pid_log_count - <span class="num">1</span>];
+                }
+            }
+        }
+
+        integral_error += error * dt_control;
+
+        <span class="type">float</span> abs_error = fabs(error);
+        <span class="type">float</span> abs_derivative = fabs(derivative);
+
+        <span class="type">float</span> control = kp * abs_error + kd * abs_derivative + ki * fabs(integral_error);
+        <span class="type">int</span> pwm_val = (<span class="type">int</span>)control;
+    </code></pre>
+    <!-- -------------------- Results -------------------- -->
+    <section id="results">
+      <h2>Results</h2>
+
+      <h3>ToF vs Time and Motor Input vs Time</h3>
+      <p>
+        The graph below shows the measured ToF response and commanded motor input over time. This plot was the primary diagnostic tool used during controller tuning. It allowed me to compare the measured distance against the setpoint while also seeing how aggressively the controller was commanding the motors and how much it was causing overshoot.
+      </p>
+      <img class="lab-image" src="../assets/images/P_control70.png" alt="PID response graph showing ToF and motor input versus time" />
+
+      <h3>Error vs Time</h3>
+      <p>
+        The error-time plot was especially useful for determining whether the response was converging smoothly or oscillating around the target. In the proportional-only case, the error decreased but did not reject steady-state offset as effectively. The integral term improved this substantially by accumulating the remaining bias over time.
+      </p>
+      <img class="lab-image" src="../assets/images/P_e_v_t_K70.png" alt="Error versus time graph for Lab 5 controller" />
+
+      <h3>Controller Performance Video</h3>
+      <p>
+        The video below shows the final controller behavior. Although the associated graph from this run is labeled as a P-controller in my local plotting script, the final tuned run shown here used the full PID controller with the gains reported above.
+      </p>
+      <div style="max-width: 420px; margin: 0.75rem auto 1.25rem; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+        <div style="position: relative; width: 100%; padding-top: 177.78%; background: #000;">
+          <iframe
+            src="https://youtube.com/shorts/gXeLucH4KAo"
+            title="YouTube Shorts video player"
+            style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- -------------------- References -------------------- -->
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        For this lab I worked with Coby Lai. I also referenced the student page Aidan Derocher while comparing implementation approaches. In addition, I used AI assistance to check syntax, review controller logic, and debug portions of the Bluetooth and embedded control code.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 5 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

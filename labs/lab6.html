@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 6 - MAE 4190: Fast Robots</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; }
+    body{
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    header{
+      background-color:#2c3e50;
+      color:#fff;
+      padding:2rem 1rem;
+      text-align:center;
+    }
+    header h1{ font-size:2rem; margin-bottom:0.5rem; }
+    header p{ font-size:1.1rem; opacity:0.92; }
+
+    main{
+      max-width:900px;
+      margin:2rem auto;
+      padding:0 1rem;
+    }
+
+    section{
+      background:#fff;
+      padding:2rem;
+      margin-bottom:2rem;
+      border-radius:8px;
+      box-shadow:0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2{
+      color:#2c3e50;
+      margin-bottom:1rem;
+      border-bottom:2px solid #3498db;
+      padding-bottom:0.5rem;
+    }
+
+    section h3{
+      margin-top:1.25rem;
+      margin-bottom:0.35rem;
+      color:#2c3e50;
+    }
+
+    p{ margin:0.5rem 0 0.75rem; }
+    ul{ margin:0.25rem 0 0.75rem 1.25rem; }
+    li{ margin:0.25rem 0; }
+
+    .lab-image{
+      width:100%;
+      max-width:720px;
+      margin:0.75rem auto 1rem;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,0.12);
+      box-shadow:0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .placeholder{
+      width:100%;
+      max-width:720px;
+      margin:0.75rem auto 1rem;
+      border-radius:10px;
+      border:2px dashed rgba(44,62,80,0.35);
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(44,62,80,0.05),
+        rgba(44,62,80,0.05) 10px,
+        rgba(44,62,80,0.08) 10px,
+        rgba(44,62,80,0.08) 20px
+      );
+      padding:1.25rem;
+      color:#2c3e50;
+      text-align:center;
+    }
+    .placeholder p{ margin:0; font-size:0.98rem; opacity:0.92; }
+
+    pre{
+      margin:0.75rem 0 1.25rem;
+      padding:1rem;
+      background:#0b0f14;
+      border:2px solid #000;
+      border-radius:10px;
+      overflow-x:auto;
+      max-width:100%;
+    }
+    code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size:0.95rem;
+      line-height:1.55;
+      color:#e6edf3;
+      white-space:pre;
+    }
+
+    .code-arduino .comment { color:#7ee787; }
+    .code-arduino .kw      { color:#ff7b72; font-weight:600; }
+    .code-arduino .type    { color:#79c0ff; }
+    .code-arduino .str     { color:#a5d6ff; }
+    .code-arduino .num     { color:#d2a8ff; }
+
+    .code-python .comment { color:#7ee787; }
+    .code-python .kw      { color:#ff7b72; font-weight:600; }
+    .code-python .type    { color:#79c0ff; }
+    .code-python .str     { color:#a5d6ff; }
+    .code-python .num     { color:#d2a8ff; }
+
+    footer{
+      text-align:center;
+      padding:1.25rem 1rem 2rem;
+      color:#666;
+      font-size:0.9rem;
+    }
+    footer a{
+      color:#3498db;
+      text-decoration:none;
+      font-weight:500;
+    }
+    footer a:hover{ text-decoration:underline; }
+
+    @media (max-width:600px){
+      section{ padding:1.25rem; }
+      header{ padding:1.5rem 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 6 Rotational PID Control</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+    <!-- -------------------- Prelab -------------------- -->
+    <section id="prelab">
+      <h2>Prelab</h2>
+
+      <h3>Bluetooth Control</h3>
+      <p>
+        Much like Lab 5, I implemented Bluetooth control through a command called ROT_PID. This command takes in a setpoint, K<sub>P</sub>, K<sub>D</sub>, K<sub>I</sub>, max PWM, and min PWM. This made it possible to tune the rotational controller during testing without plugging the robot back into my computer after every trial run. Including the minimum and maximum PWM values in the command gave me additional flexibility during testing, since the robot needed a higher minimum turning value on some surfaces in order to begin rotating (such as the hardwood floor which was my primary test surface), while the maximum value would help to limit slip on smoother floors.
+      </p>
+      <p>
+        On the Artemis side, I used the robot.command parser to unpack the controller values from a single BLE string and then execute the rotational control loop continuously until a stop command was received. At the end of each trial run, the robot sent recorded data back over Bluetooth through a for loop, including setpoint, time, yaw angle, error, PWM, and controller gains. On the Python side, I used a notification handler to decode the returned string and store the values into arrays for plotting. This made it possible to compare the robot response across different gain values and quickly iterate toward a workable controller. This was mostly done through comparing graph outputs.
+      </p>
+
+      <h3>Arduino Bluetooth Command Structure</h3>
+      <p>
+        The rotational controller was built around the ROT_PID case, which reads in the command values and starts the control loop. This structure made the testing process much more efficient because all parameters could be adjusted directly from Python.
+      </p>
+    </section>
+
+    <!-- -------------------- Lab Tasks -------------------- -->
+    <section id="lab-tasks">
+      <h2>Lab Tasks</h2>
+
+      <h3>P / I / D Controller Discussion</h3>
+      <p>
+        For Lab 6, the goal was to control robot heading. Instead of using ToF data, I estimated angular position by integrating the z-axis gyroscope reading over time, shown below. This gave an estimate of yaw angle, which could then be compared against a commanded rotational setpoint. The rotational controller used the same overall closed-loop structure as Lab 5, but the measured state was the integrated yaw angle.
+      </p>
+      <pre class="code-arduino"><code>
+        <span class="type">float</span> gyro_z_dps = myICM.gyrZ() - gyro_z_bias;
+        yaw_angle_deg += gyro_z_dps * dt_control;
+      </code></pre>
+      <p>
+        Through multiple trial runs, I found that the best overall gain set for my robot was K<sub>P</sub> = 60, K<sub>D</sub> = 0, and K<sub>I</sub> = 0.07. In practice, I found that derivative action was not necessary for the rotational task on my setup because the yaw value was already created from the derivative. While the small integral term helped reduce remaining offset in the final heading, and also, to my surprise, aided in increasing the control input if the robot got stuck when I set the minimum rotation value to be too low. The proportional term provided the main turning response, and the integral term helped the robot continue correcting when the yaw error became small near the setpoint. Thus, I ended up with a PI controller which worked effectively for a range of angles I gave it.
+      </p>
+      <p>
+        I also found that friction mattered much more for turning than they did for the straight-line controller in Lab 5. Because I was testing on hardwood floors, the robot needed a substantially higher minimum turning PWM to begin rotating. I therefore used a minimum PWM value of 120 for the successful run shown here. This ensured that the motors could overcome static friction and initiate the turn even when the controller output was relatively small.
+      </p>
+
+      <h3>Sampling Time Discussion</h3>
+      <p>
+        The rotational controller loop was written to run as fast as possible while repeatedly polling Bluetooth to check for commands or a stop command, updating the IMU, integrating the gyroscope reading, and computing a new motor command. Unlike the distance controller from Lab 5, this controller did not depend on the slower ToF sampling rate, so the limiting factor became the IMU update rate and the speed of the loop itself. This allowed for a much more continuous controller response, though it also made careful handling of timing important because the integral term depended directly on the measured loop time.
+      </p>
+      
+
+      <h3>Sampling Time</h3>
+      <p>My Pi control loop sampled quickly, allowing for quick adjustments especially at high turn rates when the pwm value was high. The below sampling rate was calculated from the run shown below.</p>
+      <img class="lab-image" src="../assets/images/samplingrate_Lab6.png" alt="sampling rate" />
+
+    <!-- -------------------- Results -------------------- -->
+    <section id="results">
+      <h2>Graphs, Code, Video, and Discussion</h2>
+
+      <h3>Rotational PI Arduino Code</h3>
+      <p>
+        The main controller computed yaw error relative to the commanded setpoint and used that value to determine whether the robot should turn left or right. Positive error commanded one turning left and negative error commanded turning right. The command stayed active until the error was sufficiently small or a stop command was received over Bluetooth.
+      </p>
+      <pre class="code-arduino"><code>
+<span class="type">float</span> error = setpoint - yaw_angle_deg;
+<span class="type">float</span> rel_error = error / setpoint;
+
+<span class="type">float</span> derivative = (error - pid_last_error) / dt_control;
+integral_error += error * dt_control;
+
+<span class="type">float</span> control = kp * rel_error + ki * integral_error;
+
+<span class="type">int</span> pwm_val = <span class="num">0</span>;
+<span class="kw">if</span> (fabs(error) &lt; <span class="num">0.05f</span>) {
+    pwm_val = <span class="num">0</span>;
+} <span class="kw">else</span> {
+    pwm_val = (<span class="type">int</span>)fabs(control);
+    <span class="kw">if</span> (pwm_val &lt; min_pwm) pwm_val = min_pwm;
+    <span class="kw">if</span> (pwm_val &gt; max_pwm) pwm_val = max_pwm;
+}
+
+<span class="kw">if</span> (pwm_val == <span class="num">0</span>) {
+    car.kill();
+}
+<span class="kw">else if</span> (error &gt; <span class="num">0.05f</span>) {
+    car.tl(pwm_val);
+}
+<span class="kw">else</span> {
+    car.tr(pwm_val);
+}
+</code></pre>
+
+      <h3>Yaw vs Time</h3>
+      <p>
+        The primary graph for this lab is the yaw response over time. This plot shows how the integrated angular estimate changes as the robot turns toward the commanded heading. For the recorded run shown on this page, I used a setpoint of <strong>100 degrees</strong>. This graph is the clearest way to evaluate whether the controller reaches the desired heading smoothly and whether it overshoots before settling.
+      </p>
+      <img class="lab-image" src="../assets/images/yaw_v_t_lab6.png" alt="Yaw versus time graph for Lab 6 rotational controller" />
+
+      <h3>Discussion of Rotational Response</h3>
+      <p>
+        In the successful runs, the robot was able to turn toward the commanded angle and settle near the desired heading using the chosen PI gain values. The proportional term produced the majority of the turning action, while the small integral term helped continue correcting error as the robot approached the target. Because the minimum turning command had to be raised to 120 on hardwood, the response was somewhat more aggressive near the start of the turn, but it also became much more reliable in actually initiating motion.
+      </p>
+      <p>
+        The main limitation of this approach is that yaw is estimated by integrating gyroscope data, so some drift can be expected especially on longer runs. Thus, I reset the controller between runs by pressing reset on the Artemis. However, for a moderate rotational target like 100 degrees, the controller was able to meet the setpoint well enough to demonstrate workable rotational feedback control. Overall, the experiment showed that the same closed-loop controller structure from Lab 5 could be extended effectively to angular control in Lab 6.
+      </p>
+
+      <h3>Controller Performance Video</h3>
+      <p>
+        The video below corresponds to the same run shown in the yaw versus time graph. The recorded run used a setpoint of 100 degrees and demonstrates the robot rotating to the commanded heading under PI control.
+      </p>
+      <div style="max-width: 420px; margin: 0.75rem auto 1.25rem; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+        <div style="position: relative; width: 100%; padding-top: 177.78%; background: #000;">
+            <iframe
+            src="https://www.youtube.com/embed/UFiFShsWjnY"
+            title="YouTube Shorts video player"
+            style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            ></iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- -------------------- References -------------------- -->
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        For this lab I worked with Coby Lai extensively when I was stuck on my initial loop. I also used AI assistance to check syntax and help debug portions of the Arduino and Python code.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 6 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 7 - MAE 4190: Fast Robots</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    header p { font-size: 1.1rem; opacity: 0.92; }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background: #fff;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+
+    section h3 {
+      margin-top: 1.25rem;
+      margin-bottom: 0.35rem;
+      color: #2c3e50;
+    }
+
+    p { margin: 0.5rem 0 0.75rem; }
+    ul { margin: 0.25rem 0 0.75rem 1.25rem; }
+    li { margin: 0.25rem 0; }
+
+    .lab-image {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .placeholder {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 10px;
+      border: 2px dashed rgba(44,62,80,0.35);
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(44,62,80,0.05),
+        rgba(44,62,80,0.05) 10px,
+        rgba(44,62,80,0.08) 10px,
+        rgba(44,62,80,0.08) 20px
+      );
+      padding: 1.25rem;
+      color: #2c3e50;
+      text-align: center;
+    }
+    .placeholder p { margin: 0; font-size: 0.98rem; opacity: 0.92; }
+
+    pre {
+      margin: 0.75rem 0 1.25rem;
+      padding: 1rem;
+      background: #0b0f14;
+      border: 2px solid #000;
+      border-radius: 10px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #e6edf3;
+      white-space: pre;
+    }
+
+    .code-python .comment { color: #7ee787; }
+    .code-python .kw      { color: #ff7b72; font-weight: 600; }
+    .code-python .type    { color: #79c0ff; }
+    .code-python .str     { color: #a5d6ff; }
+    .code-python .num     { color: #d2a8ff; }
+
+    .code-arduino .comment { color: #7ee787; }
+    .code-arduino .kw      { color: #ff7b72; font-weight: 600; }
+    .code-arduino .type    { color: #79c0ff; }
+    .code-arduino .str     { color: #a5d6ff; }
+    .code-arduino .num     { color: #d2a8ff; }
+
+    .eq-block {
+      background: #f0f4f8;
+      border-left: 4px solid #3498db;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      margin: 0.75rem 0 1rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.95rem;
+      color: #2c3e50;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      max-width: 600px;
+      margin: 0.75rem auto 1.25rem;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    th {
+      background: #2c3e50;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      text-align: left;
+    }
+    td {
+      padding: 0.45rem 1rem;
+      border-bottom: 1px solid #ddd;
+    }
+    tr:nth-child(even) td { background: #f5f7fa; }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem 1rem 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      section { padding: 1.25rem; }
+      header  { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 7: Kalman Filter</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+
+    <!-- -------------------- Step Response / Drag & Momentum -------------------- -->
+    <section id="step-response">
+      <h2>Step 1: Estimating Drag and Momentum</h2>
+
+      <h3>Computing Speed via Finite Difference</h3>
+      <p>
+        I wrote a function called U_const on the Artemis that drove the car at a constant 100 PWM toward a wall while logging ToF distance and timestamps. I placed foam against the wall and used active braking to stop the run before impact. 100 PWM was chosen to stay in the same range used in Lab 5. Speed was computed from the ToF readings using a simple finite difference between samples:
+      </p>
+      <pre class="code-python"><code>
+dt = np.diff(t_s)
+dd = np.diff(dist)
+speed = dd / dt
+      </code></pre>
+      <p>
+        I ran a couple of different step responses and used the speed traces to fit an exponential and pull out the steady-state speed and rise time.
+      </p>
+
+      <h3>Exponential Fit and Steady-State Extraction</h3>
+      <p>
+        I fit the speed data to the exponential model below, where the steady-state speed v_ss is the constant term c as the curve levels off:
+      </p>
+      <div class="eq-block">v(t) = a·e<sup>b·t</sup> + c</div>
+      <p>
+        From the first-order system model, at steady state v̇ = 0, which lets d be computed directly from v_ss:
+      </p>
+      <div class="eq-block">v̇ = −(d/m)·v + (1/m)·u</div>
+      <div class="eq-block">d = u / v<sub>ss</sub></div>
+      <p>
+        With 100 PWM normalized to u = 1, d came out to 0.29837.
+      </p>
+
+      <h3>Rise Time and Mass Estimation</h3>
+      <p>
+        To find m, I used the 70% rise time from the step response. I identified where the speed hit 70% of v_ss and plugged that time and speed into the step response formula to solve for m:
+      </p>
+      <div class="eq-block">v(t) = v<sub>ss</sub> · (1 − e<sup>−(d/m)·t</sup>)</div>
+      <p>
+        The full results from the 100 PWM run are shown in the table below.
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Step input (u)</td><td>100 PWM → normalized to 1</td></tr>
+          <tr><td>Steady-state speed (v<sub>ss</sub>)</td><td>3.3515 m/s</td></tr>
+          <tr><td>Rise percentage used</td><td>70%</td></tr>
+          <tr><td>Rise time (t<sub>r</sub>)</td><td>1.499 s</td></tr>
+          <tr><td>Estimated drag (d)</td><td>0.29837</td></tr>
+          <tr><td>Estimated mass (m)</td><td>0.37148</td></tr>
+          <tr><td>A[1,1] = −d/m</td><td>−0.8032 s<sup>−1</sup></td></tr>
+          <tr><td>B[1,0] = 1/m</td><td>2.6919 m/s²</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Step Response Graphs</h3>
+      <p>
+        The graphs below show the ToF distance, computed speed, and motor input over time for the 100 PWM run.
+      </p>
+      <img class="lab-image" src="../assets/images/L7P1_actual.png" alt="Step response graphs for 100 PWM run" />
+      <img class="lab-image" src="../assets/images/pwm_actual_L7P1.png" alt="PWM output" />
+    </section>
+
+    <!-- -------------------- KF Initialization -------------------- -->
+    <section id="kf-init">
+      <h2>Step 2 &amp; 3: Kalman Filter Initialization and Implementation (Python)</h2>
+
+      <p>
+        Using the d and m values from Step 1, I built the A and B matrices and discretized them using the average dt over the step response run. I set C = [1, 0] because the ToF measures positive distance directly and that is the only thing being measured. The state vector was initialized from the first ToF reading with zero initial speed. I started with sigma1 = 0.1 to reflect low trust in the model's position estimate, sigma2 = 100 since speed is never directly measured and has high uncertainty, and sigma3 = 50 for the ToF sensor noise. All of this setup and the Kalman Filter function are in the block below.
+      </p>
+
+      <pre class="code-python"><code>
+A = np.array([[<span class="num">0</span>, <span class="num">1</span>], [<span class="num">0</span>, <span class="num">-0.8032</span>]])
+B = np.array([[<span class="num">0</span>], [<span class="num">2.6919</span>]])
+dt = <span class="num">0.0991578947</span>
+C = np.array([<span class="num">1</span>, <span class="num">0</span>]) <span class="comment">#because I measure distance from the wall as a positive and that is the only measurement</span>
+x = np.array([[tof[<span class="num">0</span>]], [<span class="num">0</span>]]) <span class="comment">#this takes from the PID notification handler from lab 6, is positive bc</span>
+n = <span class="num">2</span>
+Ad = np.eye(n) + dt * A
+Bd = dt * B
+sigma1 = <span class="num">0.1</span> <span class="comment">#tof sensor variance, lower trust in my sensor</span>
+sigma2 = <span class="num">100</span> <span class="comment">#speed</span>
+sigma3 = <span class="num">50</span> <span class="comment">#sensor noise</span>
+sigu = np.array([[sigma1**<span class="num">2</span>, <span class="num">0</span>], [<span class="num">0</span>, sigma2**<span class="num">2</span>]]) <span class="comment">#assume no correlation</span>
+sigz = np.array([[sigma3**<span class="num">2</span>]])
+
+<span class="comment"># implementing KF based on design from lecture</span>
+<span class="kw">def</span> KF(mu, sigma, u, y):
+    mu_p = A.dot(mu) + B.dot(u)
+    sigma_p = A.dot(sigma.dot(A.transpose())) + sigu
+    sigma_m = C.dot(sigma_p.dot(C.transpose())) + sigz
+    kkf_gain = sigma_p.dot(C.transpose().dot(np.linalg.inv(sigma_m)))
+    y_m = y - C.dot(mu_p)
+    mu = mu_p + kkf_gain.dot(y_m)
+    sigma = (np.eye(<span class="num">2</span>) - kkf_gain.dot(C)).dot(sigma_p)
+    <span class="kw">return</span> mu, sigma
+      </code></pre>
+
+      <p>
+        The sigma values determine how much the filter trusts the model versus the sensor. If sigma3 is too small the filter ends up mostly passing raw ToF data through; if sigma1 and sigma2 are too small it over-trusts the model and drifts from the measurements. I iterated on the values by comparing the filter output to the raw data until the estimate tracked well without just copying the noise. Output graphs for 100 PWM and 70 PWM steps are below.
+      </p>
+
+      <img class="lab-image" src="../assets/images/L7P3.png" alt="100 PWM Step input Kalman" />
+      <img class="lab-image" src="../assets/images/L7P3_pwm.png" alt="100 PWM output for above" />
+      <img class="lab-image" src="../assets/images/L7P3_70.png" alt="70 PWM Step input Kalman" />
+      <img class="lab-image" src="../assets/images/L7P3_70pwm.png" alt="70 PWM output" />
+    </section>
+
+    <!-- -------------------- References -------------------- -->
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        For this lab I worked with Coby Lai on some sections, and referenced Trevor Dale's Lab 7 write-up when structuring the step response data collection and analysis approach. I also used AI assistance to check syntax and help structure portions of the Python code.
+      </p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 7 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

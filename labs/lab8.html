@@ -321,9 +321,9 @@
 
     tof1.startRanging();
 
-    <span class="comment">// Phase 1: drive forward until KF estimate drops below 1050mm</span>
+    <span class="comment">// Phase 1: drive forward until KF estimate drops below 609mm</span>
     car.fwd(<span class="num">200</span>);
-    <span class="kw">while</span> (kf_mu(<span class="num">0</span>,<span class="num">0</span>) &gt; <span class="num">1050.0f</span>) {
+    <span class="kw">while</span> (kf_mu(<span class="num">0</span>,<span class="num">0</span>) &gt; <span class="num">609.0f</span>) {
 
         Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; kf_u    = {<span class="num">150.0f</span> / <span class="num">100.0f</span>};
         Matrix&lt;<span class="num">2</span>,<span class="num">1</span>&gt; mu_p    = Ad * kf_mu + Bd * kf_u;

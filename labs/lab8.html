@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 8: Stunt B, Drifting my Car - MAE 4190: Fast Robots</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    header p { font-size: 1.1rem; opacity: 0.92; }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background: #fff;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+
+    section h3 {
+      margin-top: 1.25rem;
+      margin-bottom: 0.35rem;
+      color: #2c3e50;
+    }
+
+    p { margin: 0.5rem 0 0.75rem; }
+    ul { margin: 0.25rem 0 0.75rem 1.25rem; }
+    li { margin: 0.25rem 0; }
+
+    .lab-image {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .placeholder {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 10px;
+      border: 2px dashed rgba(44,62,80,0.35);
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(44,62,80,0.05),
+        rgba(44,62,80,0.05) 10px,
+        rgba(44,62,80,0.08) 10px,
+        rgba(44,62,80,0.08) 20px
+      );
+      padding: 1.25rem;
+      color: #2c3e50;
+      text-align: center;
+    }
+    .placeholder p { margin: 0; font-size: 0.98rem; opacity: 0.92; }
+
+    pre {
+      margin: 0.75rem 0 1.25rem;
+      padding: 1rem;
+      background: #0b0f14;
+      border: 2px solid #000;
+      border-radius: 10px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #e6edf3;
+      white-space: pre;
+    }
+
+    .code-arduino .comment { color: #7ee787; }
+    .code-arduino .kw      { color: #ff7b72; font-weight: 600; }
+    .code-arduino .type    { color: #79c0ff; }
+    .code-arduino .str     { color: #a5d6ff; }
+    .code-arduino .num     { color: #d2a8ff; }
+
+    .eq-block {
+      background: #f0f4f8;
+      border-left: 4px solid #3498db;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      margin: 0.75rem 0 1rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.95rem;
+      color: #2c3e50;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      max-width: 600px;
+      margin: 0.75rem auto 1.25rem;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    th {
+      background: #2c3e50;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      text-align: left;
+    }
+    td {
+      padding: 0.45rem 1rem;
+      border-bottom: 1px solid #ddd;
+    }
+    tr:nth-child(even) td { background: #f5f7fa; }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem 1rem 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      section { padding: 1.25rem; }
+      header  { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 8: Stunt B, Drifting my Car</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+
+    <!-- -------------------- RPID Function -------------------- -->
+    <section id="rpid">
+      <h2>Turning ROT_PID into a Callable Function RPID</h2>
+
+      <p>
+        I converted the ROT_PID case into a standalone callable function, RPID(float s). This means rotational control is no longer tied to a BLE command, any other case can just call it directly and the program blocks until the turn finishes. The end condition is getting within 2 degrees of the setpoint, checked continuously via gyro integration, which makes the rotation genuinely closed loop when it's embedded inside a bigger maneuver.
+      </p>
+
+      <p>
+        One deliberate choice was having the function immediately drive forward once the turn completes rather than stopping. This speeds up the exit from the drift and carries momentum into the final straight.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="kw">void</span> RPID(<span class="type">float</span> s) {
+    <span class="type">float</span> setpoint = s;
+    <span class="type">float</span> kp = <span class="num">2.0f</span>;
+    <span class="type">float</span> ki = <span class="num">0.07f</span>;
+    <span class="type">int</span> max_pwm = <span class="num">60</span>;
+    <span class="type">int</span> min_pwm = <span class="num">45</span>;
+
+    <span class="type">float</span> integral_error = <span class="num">0.0f</span>;
+    <span class="type">float</span> yaw_angle_deg  = <span class="num">0.0f</span>;
+    <span class="type">float</span> gyro_z_bias    = <span class="num">0.0f</span>;
+
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span class="num">2</span>; i++) {
+        myICM.getAGMT();
+        gyro_z_bias += myICM.gyrZ();
+    }
+    gyro_z_bias /= <span class="num">2.0f</span>;
+
+    <span class="type">unsigned long</span> last_control_us = micros();
+    <span class="type">float</span> error = <span class="num">180.0f</span>;
+
+    <span class="kw">while</span> (fabs(error) &gt; <span class="num">1.0f</span>) {
+        myICM.getAGMT();
+        <span class="type">unsigned long</span> now_us = micros();
+        <span class="type">float</span> dt_control = (now_us - last_control_us) / <span class="num">1000000.0f</span>;
+        <span class="kw">if</span> (dt_control &lt;= <span class="num">0.0f</span>) <span class="kw">continue</span>;
+        last_control_us = now_us;
+
+        <span class="type">float</span> gyro_z_dps = myICM.gyrZ() - gyro_z_bias;
+        yaw_angle_deg += gyro_z_dps * dt_control;
+        error = setpoint - yaw_angle_deg;
+
+        integral_error += error * dt_control;
+        <span class="kw">if</span> (integral_error &gt;  <span class="num">100.0f</span>) integral_error =  <span class="num">100.0f</span>;
+        <span class="kw">if</span> (integral_error &lt; -<span class="num">100.0f</span>) integral_error = -<span class="num">100.0f</span>;
+
+        <span class="type">float</span> control = kp * error + ki * integral_error;
+        <span class="type">int</span> pwm_val = <span class="num">0</span>;
+
+        <span class="kw">if</span> (fabs(error) &lt; <span class="num">2.0f</span>) {
+            car.kill();
+            <span class="kw">break</span>;
+        } <span class="kw">else</span> {
+            pwm_val = (<span class="type">int</span>)fabs(control);
+            <span class="kw">if</span> (pwm_val &lt; min_pwm) pwm_val = min_pwm;
+            <span class="kw">if</span> (pwm_val &gt; max_pwm) pwm_val = max_pwm;
+        }
+
+        <span class="kw">if</span> (error &gt; <span class="num">0.0f</span>) { car.tl(pwm_val); }
+        <span class="kw">else</span>              { car.tr(pwm_val); }
+    }
+
+    car.fwd(<span class="num">200</span>);
+}
+      </code></pre>
+    </section>
+
+    <!-- -------------------- KF Function -------------------- -->
+    <section id="kf-function">
+      <h2>Kalman Filter as a Callable Function</h2>
+
+      <p>
+        I wrote the Kalman filter logic from Lab 7 into a standalone function that takes a PWM value and a setpoint, and returns a bool for whether the estimated position has crossed the setpoint. The PWM input scales the control input to the motion model, which keeps the filter accurate at the higher speeds used in the stunt. On the first call it blocks to grab a real ToF reading to seed the state vector, then carries kf_mu and kf_sigma forward as globals between calls.
+      </p>
+
+      <p>
+        In the end I didn't use the function in the final STUNT case, I inlined the KF logic directly into the case to keep the loop structure explicit and avoid the init path overhead. I kept the standalone function around for use in other future cases though.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="type">bool</span> KF(<span class="type">int</span> signed_pwm, <span class="type">float</span> setpoint) {
+
+    <span class="kw">if</span> (!kf_init) {
+        tof1.startRanging();
+        <span class="type">unsigned long</span> t0 = millis();
+        <span class="kw">while</span> (!tof1.checkForDataReady() &amp;&amp; millis() - t0 &lt; <span class="num">50</span>) { delay(<span class="num">1</span>); }
+        <span class="kw">if</span> (tof1.checkForDataReady()) {
+            kf_mu(<span class="num">0</span>,<span class="num">0</span>) = (<span class="type">float</span>)tof1.getDistance();
+            kf_mu(<span class="num">1</span>,<span class="num">0</span>) = <span class="num">0.0f</span>;
+            tof1.clearInterrupt();
+        }
+        tof1.stopRanging();
+        tof1.startRanging();
+        kf_init = <span class="kw">true</span>;
+    }
+
+    Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; kf_u    = {(<span class="type">float</span>)signed_pwm / <span class="num">100.0f</span>};
+    Matrix&lt;<span class="num">2</span>,<span class="num">1</span>&gt; mu_p    = Ad * kf_mu + Bd * kf_u;
+    Matrix&lt;<span class="num">2</span>,<span class="num">2</span>&gt; sigma_p = Ad * kf_sigma * ~Ad + su;
+
+    <span class="kw">if</span> (tof1.checkForDataReady()) {
+        <span class="type">int</span> tof_value = tof1.getDistance();
+        tof1.clearInterrupt();
+        tof1.stopRanging();
+        tof1.startRanging();
+
+        Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; kf_y    = {(<span class="type">float</span>)tof_value};
+        Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; sigma_m = C * sigma_p * ~C + sz;
+        Matrix&lt;<span class="num">2</span>,<span class="num">1</span>&gt; K       = sigma_p * ~C * Inverse(sigma_m);
+        Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; y_m     = kf_y - C * mu_p;
+        Matrix&lt;<span class="num">2</span>,<span class="num">2</span>&gt; I2;
+        I2.Fill(<span class="num">0</span>); I2(<span class="num">0</span>,<span class="num">0</span>) = <span class="num">1.0f</span>; I2(<span class="num">1</span>,<span class="num">1</span>) = <span class="num">1.0f</span>;
+        kf_mu    = mu_p + K * y_m;
+        kf_sigma = (I2 - K * C) * sigma_p;
+    } <span class="kw">else</span> {
+        kf_mu    = mu_p;
+        kf_sigma = sigma_p;
+    }
+
+    <span class="kw">return</span> kf_mu(<span class="num">0</span>, <span class="num">0</span>) &lt;= setpoint;
+}
+      </code></pre>
+    </section>
+
+    <!-- -------------------- STUNT Case -------------------- -->
+    <section id="stunt">
+      <h2>Putting it Together: The STUNT Case</h2>
+
+      <p>
+        With RPID callable and the KF logic working, I assembled the full stunt in a 3-phase STUNT case. First, the car drives forward at 200 pwm while the Kalman filter runs inline in the loop to track distance to the wall without ever stalling waiting for a sensor reading. I set the turn to trigger when the KF estimate drops below 609mm, roughly two feet, which is intentionally closer than the three-foot marker in the demo to push the drift harder into the wall. Once the RPID detects the car within 2 degrees of the target angle it immediately kicks into a forward drive, and the case runs that for 1.2 seconds before killing the motors.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="kw">case</span> STUNT: {
+    tof1.setDistanceModeLong();
+    <span class="type">int</span> setpoint;
+    <span class="kw">if</span> (!robot_cmd.get_next_value(setpoint)) <span class="kw">break</span>;
+
+    tof1.startRanging();
+    <span class="kw">while</span> (!tof1.checkForDataReady()) { delay(<span class="num">1</span>); }
+    <span class="type">int</span> first_tof = tof1.getDistance();
+    tof1.clearInterrupt();
+    tof1.stopRanging();
+
+    Matrix&lt;<span class="num">2</span>,<span class="num">1</span>&gt; kf_mu    = {(<span class="type">float</span>)first_tof, <span class="num">0.0f</span>};
+    Matrix&lt;<span class="num">2</span>,<span class="num">2</span>&gt; kf_sigma = {<span class="num">100</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">100</span>};
+
+    tof1.startRanging();
+
+    <span class="comment">// Phase 1: drive forward until KF estimate drops below 1050mm</span>
+    car.fwd(<span class="num">200</span>);
+    <span class="kw">while</span> (kf_mu(<span class="num">0</span>,<span class="num">0</span>) &gt; <span class="num">1050.0f</span>) {
+
+        Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; kf_u    = {<span class="num">150.0f</span> / <span class="num">100.0f</span>};
+        Matrix&lt;<span class="num">2</span>,<span class="num">1</span>&gt; mu_p    = Ad * kf_mu + Bd * kf_u;
+        Matrix&lt;<span class="num">2</span>,<span class="num">2</span>&gt; sigma_p = Ad * kf_sigma * ~Ad + su;
+
+        <span class="kw">if</span> (tof1.checkForDataReady()) {
+            <span class="type">int</span> tof_value = tof1.getDistance();
+            tof1.clearInterrupt();
+            tof1.stopRanging();
+            tof1.startRanging();
+
+            Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; kf_y    = {(<span class="type">float</span>)tof_value};
+            Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; sigma_m = C * sigma_p * ~C + sz;
+            Matrix&lt;<span class="num">2</span>,<span class="num">1</span>&gt; K       = sigma_p * ~C * Inverse(sigma_m);
+            Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; y_m     = kf_y - C * mu_p;
+            Matrix&lt;<span class="num">2</span>,<span class="num">2</span>&gt; I2;
+            I2.Fill(<span class="num">0</span>); I2(<span class="num">0</span>,<span class="num">0</span>) = <span class="num">1.0f</span>; I2(<span class="num">1</span>,<span class="num">1</span>) = <span class="num">1.0f</span>;
+            kf_mu    = mu_p + K * y_m;
+            kf_sigma = (I2 - K * C) * sigma_p;
+        } <span class="kw">else</span> {
+            kf_mu    = mu_p;
+            kf_sigma = sigma_p;
+        }
+    }
+    car.kill();
+    tof1.stopRanging();
+
+    <span class="comment">// Phase 2: 180 turn via RPID</span>
+    RPID(setpoint);
+
+    <span class="comment">// Phase 3: drive forward for 1.2 seconds</span>
+    <span class="type">unsigned long</span> start = millis();
+    car.fwd(<span class="num">200</span>);
+    <span class="kw">while</span> (millis() - start &lt; <span class="num">1200</span>);
+    car.kill();
+
+    <span class="kw">break</span>;
+}
+      </code></pre>
+
+      <h3>Demo</h3>
+      <p>
+        The pen in the video is placed exactly three feet from the wall. The car begins its turn at roughly two feet, bringing the drift noticeably closer to the wall than the 3ft marker.
+      </p>
+      <iframe
+        width="720" height="405"
+        src="https://www.youtube.com/embed/y4tbLC_XgY8"
+        title="STUNT Demo"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        style="display:block; max-width:720px; width:100%; margin:0.75rem auto 1rem; border-radius:8px;">
+      </iframe>
+    </section>
+
+    <!-- -------------------- References -------------------- -->
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        I worked with Coby Lai extensively on this lab. I also used AI assistance to check Arduino and HTML syntax.
+      </p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 8 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

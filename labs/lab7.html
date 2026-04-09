@@ -148,6 +148,26 @@
     }
     tr:nth-child(even) td { background: #f5f7fa; }
 
+    .video-placeholder {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 10px;
+      border: 2px dashed rgba(44,62,80,0.35);
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(44,62,80,0.05),
+        rgba(44,62,80,0.05) 10px,
+        rgba(44,62,80,0.08) 10px,
+        rgba(44,62,80,0.08) 20px
+      );
+      padding: 2rem 1.25rem;
+      color: #2c3e50;
+      text-align: center;
+    }
+    .video-placeholder p { margin: 0.25rem 0; font-size: 0.98rem; opacity: 0.92; }
+    .video-placeholder .video-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
     footer {
       text-align: center;
       padding: 1.25rem 1rem 2rem;
@@ -283,6 +303,97 @@ sigz = np.array([[sigma3**<span class="num">2</span>]])
       <img class="lab-image" src="../assets/images/L7P3_pwm.png" alt="100 PWM output for above" />
       <img class="lab-image" src="../assets/images/L7P3_70.png" alt="70 PWM Step input Kalman" />
       <img class="lab-image" src="../assets/images/L7P3_70pwm.png" alt="70 PWM output" />
+    </section>
+
+    <!-- -------------------- Closed Loop Kalman Filter -------------------- -->
+    <section id="closed-loop-kf">
+      <h2>Closed Loop Kalman Filter</h2>
+
+      <p>
+        With the filter validated in Python, I ported it to Arduino inside the <code>KPID</code> case to run closed-loop position control in real time. The key design goal was to keep the control loop running as fast as possible rather than stalling and waiting for the ToF sensor. Every iteration of the loop runs a KF predict step unconditionally. If new ToF data is available the filter performs a full measurement update and corrects the estimate; if not, it simply propagates the prediction forward, effectively interpolating the robot's position between sensor readings using the motion model. The PID controller then acts on the KF estimate rather than the raw sensor value, giving it a smooth, high-rate position signal regardless of when the hardware delivers a measurement.
+      </p>
+
+      <p>
+        One hardware issue that came up during tuning was that the hard stop (<code>car.kill()</code>) caused a consistent left-turning tendency on braking, which made it difficult for the controller to settle accurately. Switching to the soft stop (<code>car.fkill()</code>) in the deadband eliminated this and allowed the car to stop straight.
+      </p>
+
+      <h3>Arduino Implementation</h3>
+      <p>
+        The filter is seeded from a blocking ToF read before the loop starts, ensuring <code>kf_mu</code> holds a real distance rather than zero when the PID first evaluates. Inside the loop, the predict–update structure mirrors the Python implementation exactly:
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="comment">// seed KF from first real ToF reading</span>
+tof1.startRanging();
+<span class="kw">while</span> (!tof1.checkForDataReady()) { delay(<span class="num">1</span>); }
+<span class="type">int</span> first_tof = tof1.getDistance();
+tof1.clearInterrupt();
+tof1.stopRanging();
+
+Matrix&lt;<span class="num">2</span>,<span class="num">2</span>&gt; kf_sigma = {<span class="num">100</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">100</span>};
+Matrix&lt;<span class="num">2</span>,<span class="num">1</span>&gt; kf_mu    = {(<span class="type">float</span>)first_tof, <span class="num">0</span>};
+
+tof1.startRanging();
+
+<span class="kw">while</span> (millis() - start_ms &lt; (<span class="type">unsigned long</span>)runtime_ms) {
+
+    <span class="comment">// KF predict (runs every iteration)</span>
+    Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; kf_u    = {(<span class="type">float</span>)last_pwm / <span class="num">100.0</span>};
+    Matrix&lt;<span class="num">2</span>,<span class="num">1</span>&gt; mu_p    = Ad * kf_mu + Bd * kf_u;
+    Matrix&lt;<span class="num">2</span>,<span class="num">2</span>&gt; sigma_p = Ad * kf_sigma * ~Ad + su;
+
+    <span class="comment">// KF update — only if ToF data is ready, never stall</span>
+    tof_ready = tof1.checkForDataReady();
+    <span class="kw">if</span> (tof_ready) {
+        tof_value = tof1.getDistance();
+        tof1.clearInterrupt();
+        tof1.stopRanging();
+        tof1.startRanging();
+
+        Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; kf_y    = {(<span class="type">float</span>)tof_value};
+        Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; sigma_m = C * sigma_p * ~C + sz;
+        Matrix&lt;<span class="num">2</span>,<span class="num">1</span>&gt; K       = sigma_p * ~C * Inverse(sigma_m);
+        Matrix&lt;<span class="num">1</span>,<span class="num">1</span>&gt; y_m     = kf_y - C * mu_p;
+        Matrix&lt;<span class="num">2</span>,<span class="num">2</span>&gt; I2;
+        I2.Fill(<span class="num">0</span>); I2(<span class="num">0</span>,<span class="num">0</span>) = <span class="num">1.0f</span>; I2(<span class="num">1</span>,<span class="num">1</span>) = <span class="num">1.0f</span>;
+        kf_mu    = mu_p + K * y_m;
+        kf_sigma = (I2 - K * C) * sigma_p;
+    } <span class="kw">else</span> {
+        <span class="comment">// no new ToF — propagate prediction only (interpolation)</span>
+        kf_mu    = mu_p;
+        kf_sigma = sigma_p;
+    }
+
+    <span class="comment">// PID acts on KF estimate</span>
+    <span class="type">float</span> kf_dist = kf_mu(<span class="num">0</span>, <span class="num">0</span>);
+    <span class="type">float</span> error   = kf_dist - (<span class="type">float</span>)setpoint;
+
+    <span class="type">float</span> control = kp * error + kd * derivative + ki * integral_error;
+
+    <span class="kw">if</span> (fabs(error) &lt; <span class="num">10.0f</span>) {
+        car.fkill();          <span class="comment">// soft stop avoids left-turn tendency on braking</span>
+        signed_pwm = <span class="num">0</span>;
+    } <span class="kw">else</span> {
+        pwm_val = (<span class="type">int</span>)fabs(control);
+        <span class="kw">if</span> (pwm_val &gt; <span class="num">120</span>) pwm_val = <span class="num">120</span>;
+        <span class="kw">if</span> (pwm_val &lt; <span class="num">45</span>)  pwm_val = <span class="num">45</span>;
+
+        <span class="kw">if</span> (control &gt; <span class="num">0.0f</span>) { car.fwd(pwm_val);  signed_pwm =  pwm_val; }
+        <span class="kw">else</span>               { car.back(pwm_val); signed_pwm = -pwm_val; }
+    }
+}
+      </code></pre>
+
+      <h3>Demo</h3>
+      <iframe
+        width="720" height="405"
+        src="https://www.youtube.com/embed/HT-Q26o9u9Q?feature=share"
+        title="KPID Demo"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        style="display:block; max-width:720px; width:100%; margin:0.75rem auto 1rem; border-radius:8px;">
+      </iframe>
     </section>
 
     <!-- -------------------- References -------------------- -->

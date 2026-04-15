@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 9: Mapping - MAE 4190: Fast Robots</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    header p  { font-size: 1.1rem; opacity: 0.92; }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background: #fff;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+
+    section h3 {
+      margin-top: 1.25rem;
+      margin-bottom: 0.35rem;
+      color: #2c3e50;
+    }
+
+    p  { margin: 0.5rem 0 0.75rem; }
+    ul { margin: 0.25rem 0 0.75rem 1.25rem; }
+    li { margin: 0.25rem 0; }
+
+    .lab-image {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .placeholder {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 10px;
+      border: 2px dashed rgba(44,62,80,0.35);
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(44,62,80,0.05),
+        rgba(44,62,80,0.05) 10px,
+        rgba(44,62,80,0.08) 10px,
+        rgba(44,62,80,0.08) 20px
+      );
+      padding: 1.5rem 1.25rem;
+      color: #2c3e50;
+      text-align: center;
+    }
+    .placeholder p { margin: 0.2rem 0; font-size: 0.98rem; opacity: 0.85; }
+
+    pre {
+      margin: 0.75rem 0 1.25rem;
+      padding: 1rem;
+      background: #0b0f14;
+      border: 2px solid #000;
+      border-radius: 10px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #e6edf3;
+      white-space: pre;
+    }
+
+    .code-arduino .comment { color: #7ee787; }
+    .code-arduino .kw      { color: #ff7b72; font-weight: 600; }
+    .code-arduino .type    { color: #79c0ff; }
+    .code-arduino .str     { color: #a5d6ff; }
+    .code-arduino .num     { color: #d2a8ff; }
+
+    .code-python .comment  { color: #7ee787; }
+    .code-python .kw       { color: #ff7b72; font-weight: 600; }
+    .code-python .type     { color: #79c0ff; }
+    .code-python .str      { color: #a5d6ff; }
+    .code-python .num      { color: #d2a8ff; }
+
+    .eq-block {
+      background: #f0f4f8;
+      border-left: 4px solid #3498db;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      margin: 0.75rem 0 1rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.95rem;
+      color: #2c3e50;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      max-width: 600px;
+      margin: 0.75rem auto 1.25rem;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    th {
+      background: #2c3e50;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      text-align: left;
+    }
+    td {
+      padding: 0.45rem 1rem;
+      border-bottom: 1px solid #ddd;
+    }
+    tr:nth-child(even) td { background: #f5f7fa; }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 0.75rem 0 1.25rem;
+    }
+    @media (max-width: 600px) {
+      .image-grid { grid-template-columns: 1fr; }
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem 1rem 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      section { padding: 1.25rem; }
+      header  { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 9: Mapping</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+
+    <!-- -------------------- RPID Adjustments -------------------- -->
+    <section id="rpid">
+      <h2>Adjustments to RPID for Scanning</h2>
+
+      <p>
+        Since RPID was already working and callable from Lab 8, I used it for orientation control. It fits naturally into the SCAN case, rotating the robot in fixed degree increments and stopping at each one while the sensors collect readings. Keeping the robot stationary for every measurement is important, as the ToF sensor can produce false outputs if the target distance is changing during integration.
+      </p>
+
+      <p>
+        I used 20 degree steps for 18 stops per full rotation, exceeding the 14 reading minimum. RPID settles within 2 degrees of each target, and since the integrator resets on every call, gyro drift does not accumulate across steps. For an on-axis turn in the center of a 4x4m empty room, a 2 degree angular error at 2m wall distance corresponds to roughly 70mm of positional error. At the maximum corner distance of approximately 2.83m this grows to around 99mm.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="kw">void</span> RPID(<span class="type">float</span> s) {
+    <span class="type">float</span> setpoint = s;
+    <span class="type">float</span> kp = <span class="num">2.0f</span>;
+    <span class="type">float</span> ki = <span class="num">0.07f</span>;
+    <span class="type">int</span> max_pwm = <span class="num">60</span>;
+    <span class="type">int</span> min_pwm = <span class="num">45</span>;
+
+    <span class="type">float</span> integral_error = <span class="num">0.0f</span>;
+    <span class="type">float</span> yaw_angle_deg  = <span class="num">0.0f</span>;
+    <span class="type">float</span> gyro_z_bias    = <span class="num">0.0f</span>;
+
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span class="num">2</span>; i++) {
+        myICM.getAGMT();
+        gyro_z_bias += myICM.gyrZ();
+    }
+    gyro_z_bias /= <span class="num">2.0f</span>;
+
+    <span class="type">unsigned long</span> last_control_us = micros();
+    <span class="type">float</span> error = setpoint;
+
+    <span class="kw">while</span> (fabs(error) &gt; <span class="num">1.0f</span>) {
+        myICM.getAGMT();
+        <span class="type">unsigned long</span> now_us = micros();
+        <span class="type">float</span> dt_control = (now_us - last_control_us) / <span class="num">1000000.0f</span>;
+        <span class="kw">if</span> (dt_control &lt;= <span class="num">0.0f</span>) <span class="kw">continue</span>;
+        last_control_us = now_us;
+
+        <span class="type">float</span> gyro_z_dps = myICM.gyrZ() - gyro_z_bias;
+        yaw_angle_deg += gyro_z_dps * dt_control;
+        error = setpoint - yaw_angle_deg;
+
+        integral_error += error * dt_control;
+        <span class="kw">if</span> (integral_error &gt;  <span class="num">100.0f</span>) integral_error =  <span class="num">100.0f</span>;
+        <span class="kw">if</span> (integral_error &lt; -<span class="num">100.0f</span>) integral_error = -<span class="num">100.0f</span>;
+
+        <span class="type">float</span> control = kp * error + ki * integral_error;
+        <span class="type">int</span> pwm_val = <span class="num">0</span>;
+
+        <span class="kw">if</span> (fabs(error) &lt; <span class="num">2.0f</span>) {
+            car.kill();
+            <span class="kw">break</span>;
+        } <span class="kw">else</span> {
+            pwm_val = (<span class="type">int</span>)fabs(control);
+            <span class="kw">if</span> (pwm_val &lt; min_pwm) pwm_val = min_pwm;
+            <span class="kw">if</span> (pwm_val &gt; max_pwm) pwm_val = max_pwm;
+        }
+
+        <span class="kw">if</span> (error &gt; <span class="num">0.0f</span>) { car.tl(pwm_val); }
+        <span class="kw">else</span>              { car.tr(pwm_val); }
+    }
+    car.kill();
+}
+      </code></pre>
+    </section>
+
+    <!-- -------------------- SCAN Case -------------------- -->
+    <section id="scan">
+      <h2>The SCAN Case</h2>
+
+      <p>
+        The SCAN case takes four BLE arguments: number of steps, degrees per step, and x and y coordinates. The coordinates are logged in every transmitted data line so the Python notification handler can sort readings by position automatically. At each stop a 100ms delay allows both sensors to settle, then 4 readings from each ToF are averaged before RPID rotates to the next step. Step count and increment are configurable from Python without modifying the Arduino code.
+      </p>
+
+      <p>
+        Scans were collected at five positions. Because the robot was started at a 90 degree offset from the intended orientation, the x and y coordinate inputs are swapped and sign-flipped relative to the lab specification. The transformation matrices account for this correctly as long as the coordinates are entered consistently.
+      </p>
+
+      <pre class="code-arduino"><code>
+<span class="kw">case</span> SCAN: {
+    <span class="type">int</span> steps = <span class="num">12</span>;
+    <span class="type">int</span> deg_per_step = <span class="num">30</span>;
+    <span class="type">float</span> x_pos = <span class="num">0.0f</span>;
+    <span class="type">float</span> y_pos = <span class="num">0.0f</span>;
+
+    <span class="kw">if</span> (!robot_cmd.get_next_value(steps))        <span class="kw">break</span>;
+    <span class="kw">if</span> (!robot_cmd.get_next_value(deg_per_step)) <span class="kw">break</span>;
+    <span class="kw">if</span> (!robot_cmd.get_next_value(x_pos))        <span class="kw">break</span>;
+    <span class="kw">if</span> (!robot_cmd.get_next_value(y_pos))        <span class="kw">break</span>;
+
+    <span class="type">float</span> scan_tof1_array[steps];
+    <span class="type">float</span> scan_tof2_array[steps];
+    <span class="type">float</span> scan_yaw_array[steps];
+    <span class="type">float</span> cumulative_yaw = <span class="num">0.0f</span>;
+
+    tof1.startRanging();
+    tof2.startRanging();
+
+    <span class="kw">for</span> (<span class="type">int</span> step = <span class="num">0</span>; step &lt; steps; step++) {
+
+        delay(<span class="num">100</span>); <span class="comment">// settle time before measuring</span>
+
+        <span class="type">float</span> sum1 = <span class="num">0.0f</span>, sum2 = <span class="num">0.0f</span>;
+        <span class="type">int</span> count1 = <span class="num">0</span>, count2 = <span class="num">0</span>;
+
+        <span class="kw">while</span> (count1 &lt; <span class="num">4</span> || count2 &lt; <span class="num">4</span>) {
+            <span class="kw">if</span> (count1 &lt; <span class="num">4</span> &amp;&amp; tof1.checkForDataReady()) {
+                sum1 += tof1.getDistance();
+                tof1.clearInterrupt();
+                count1++;
+            }
+            <span class="kw">if</span> (count2 &lt; <span class="num">4</span> &amp;&amp; tof2.checkForDataReady()) {
+                sum2 += tof2.getDistance();
+                tof2.clearInterrupt();
+                count2++;
+            }
+        }
+
+        scan_tof1_array[step] = sum1 / <span class="num">4.0f</span>;
+        scan_tof2_array[step] = sum2 / <span class="num">4.0f</span>;
+        scan_yaw_array[step]  = cumulative_yaw;
+
+        <span class="kw">if</span> (step &lt; steps - <span class="num">1</span>) {
+            tof1.stopRanging();
+            tof2.stopRanging();
+            RPID((<span class="type">float</span>)deg_per_step);
+            cumulative_yaw += (<span class="type">float</span>)deg_per_step;
+            tof1.startRanging();
+            tof2.startRanging();
+        }
+    }
+
+    car.kill();
+    tof1.stopRanging();
+    tof2.stopRanging();
+
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; steps; i++) {
+        tx_estring_value.clear();
+        tx_estring_value.append(<span class="str">"SCAN:"</span>);
+        tx_estring_value.append(x_pos);      tx_estring_value.append(<span class="str">","</span>);
+        tx_estring_value.append(y_pos);      tx_estring_value.append(<span class="str">","</span>);
+        tx_estring_value.append(scan_yaw_array[i]);  tx_estring_value.append(<span class="str">","</span>);
+        tx_estring_value.append(scan_tof1_array[i]); tx_estring_value.append(<span class="str">","</span>);
+        tx_estring_value.append(scan_tof2_array[i]);
+        tx_characteristic_string.writeValue(tx_estring_value.c_str());
+        delay(<span class="num">10</span>);
+    }
+
+    <span class="kw">break</span>;
+}
+      </code></pre>
+
+      <h3>Demo</h3>
+      <p>
+        The video below shows the SCAN case running at position (2, -3) in my reference frame, which corresponds to (-3, -2) in the lab reference frame.
+      </p>
+      <iframe
+        width="720" height="405"
+        src="https://www.youtube.com/embed/9Oo-4c-Jgbc"
+        title="SCAN Demo"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        style="display:block; max-width:720px; width:100%; margin:0.75rem auto 1rem; border-radius:8px;">
+      </iframe>
+    </section>
+
+    <!-- -------------------- Transformation Matrices -------------------- -->
+    <section id="transforms">
+      <h2>Transformation Matrices</h2>
+
+      <p>
+        To merge all scan positions into a single world frame map, a transformation matrix T was computed for each position encoding the robot's location (x, y) and heading theta. Multiplying a robot-frame point by T gives its world frame coordinates.
+      </p>
+
+      <p>
+        The front ToF (tof1) is 75mm from center along robot y, and the side ToF (tof2) is 30mm from center along the negative robot x axis. A tof1 reading d maps to (0, 75+d) and a tof2 reading d maps to (-(30+d), 0) in robot frame. Robot positions are specified in feet and converted to mm before the transform is applied.
+      </p>
+
+      <div class="eq-block">
+T(x, y, θ) =  | cos θ   -sin θ   x |
+              | sin θ    cos θ   y |
+              |   0        0     1 |
+
+p_world = T · p_robot
+      </div>
+    </section>
+
+    <!-- -------------------- Scan Results -------------------- -->
+    <section id="results">
+      <h2>Scan Results</h2>
+
+      <p>
+        The five scan positions in my reference frame were (-3, 0), (-3, 5), (0, 0), (2, -3), and (3, 5), corresponding to the lab spec positions with swapped and sign-flipped coordinates due to the 90 degree starting offset described above.
+      </p>
+
+      <h3>Individual Scan Plots</h3>
+      <p>
+        Each scan is plotted in polar coordinates from the robot's position as a sanity check. The shapes are consistent with the expected lab geometry at each location.
+      </p>
+
+      <div class="image-grid">
+        <img class="lab-image" src="../assets/images/Point Map: scan_0_0_1.json.png" alt="(0,0) scan" />
+        <img class="lab-image" src="../assets/images/Point Map: scan_-3_0_1.json.png" alt="(-3,0) scan" />
+        <img class="lab-image" src="../assets/images/Point Map: scan_3_5_1.json.png" alt="(3,5) scan" />
+        <img class="lab-image" src="../assets/images/Point Map: scan_2_-3_1.json.png" alt="(2,-3) scan" />
+        <img class="lab-image" src="../assets/images/Point Map: scan_-3_5_1.json.png" alt="(-3,5) scan" />
+      </div>
+
+      <h3>Combined World Map</h3>
+      <p>
+        All five scans merged into a single world frame scatter plot, with tof1 in blue and tof2 in red. The result is consistent with the known lab geometry, with some outliers near corners where the sensor beam clipped edges rather than flat wall surfaces.
+      </p>
+
+      <img class="lab-image" src="../assets/images/Raw Point Map:  All 5 Point Scans.png.png" alt="Raw Combined Scans" />
+
+      <h3>Map with Wall Segments</h3>
+      <p>
+        Wall segments were fitted manually to the scatter data. Minor endpoint adjustments were made where slight heading offsets at individual scan positions produced small rotational shifts in the point clusters, likely from the robot not being placed perfectly parallel to the room axes at each scan start.
+      </p>
+
+      <img class="lab-image" src="../assets/images/Manual Walls — All Scans.png" alt="Combined with Walls" />
+
+      <h3>Accuracy</h3>
+      <p>
+        RPID kept per-step angular error within 2 degrees, and since the integrator resets each call, drift does not accumulate over the rotation. The dominant error source was ToF noise at longer ranges, reduced by averaging 4 readings per step. An additional source of error is that the left wheels require higher PWM than the right to overcome static friction, causing the car to drift slightly off the scan point during each rotation rather than turning purely on axis. This effect worsens as the battery loses charge, introducing a systematic positional offset between readings that the transformation matrices cannot correct.
+      </p>
+    </section>
+
+    <!-- -------------------- References -------------------- -->
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        I used AI assistance to help structure the write-up and check syntax.
+      </p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 9 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

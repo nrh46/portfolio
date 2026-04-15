@@ -195,7 +195,7 @@
       </p>
 
       <p>
-        I used 20 degree steps for 18 stops per full rotation, exceeding the 14 reading minimum. RPID settles within 2 degrees of each target, and since the integrator resets on every call, gyro drift does not accumulate across steps. For an on-axis turn in the center of a 4x4m empty room, a 2 degree angular error at 2m wall distance corresponds to roughly 70mm of positional error. At the maximum corner distance of approximately 2.83m this grows to around 99mm.
+        I used 20 degree steps for 18 stops per full rotation, exceeding the 14 reading minimum. RPID settles within 2 degrees of each target, and since the integrator resets on every call, gyro drift does not accumulate as much across steps. For an on-axis turn in the center of a 4x4m empty room, a 2 degree angular error at 2m wall distance corresponds to roughly 40mm of positional error. At the maximum corner distance of approximately 2.83m this grows to around 78mm.
       </p>
 
       <pre class="code-arduino"><code>
@@ -256,7 +256,7 @@
 
     <!-- -------------------- SCAN Case -------------------- -->
     <section id="scan">
-      <h2>The SCAN Case</h2>
+      <h2>My SCAN Case</h2>
 
       <p>
         The SCAN case takes four BLE arguments: number of steps, degrees per step, and x and y coordinates. The coordinates are logged in every transmitted data line so the Python notification handler can sort readings by position automatically. At each stop a 100ms delay allows both sensors to settle, then 4 readings from each ToF are averaged before RPID rotates to the next step. Step count and increment are configurable from Python without modifying the Arduino code.
@@ -364,7 +364,7 @@
       </p>
 
       <p>
-        The front ToF (tof1) is 75mm from center along robot y, and the side ToF (tof2) is 30mm from center along the negative robot x axis. A tof1 reading d maps to (0, 75+d) and a tof2 reading d maps to (-(30+d), 0) in robot frame. Robot positions are specified in feet and converted to mm before the transform is applied.
+        The front ToF (tof1) is 75mm from center along robot y, and the side ToF (tof2) is 30mm from center along the negative robot x axis. A tof1 reading maps to (0, 75+d) and a tof2 reading maps to (-(30+d), 0) in robot frame. Robot positions are specified in feet and converted to mm before the transform is applied.
       </p>
 
       <div class="eq-block">

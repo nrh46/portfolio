@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 10: Grid Localization - MAE 4190: Fast Robots</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    header p  { font-size: 1.1rem; opacity: 0.92; }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background: #fff;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+
+    section h3 {
+      margin-top: 1.25rem;
+      margin-bottom: 0.35rem;
+      color: #2c3e50;
+    }
+
+    p  { margin: 0.5rem 0 0.75rem; }
+    ul { margin: 0.25rem 0 0.75rem 1.25rem; }
+    li { margin: 0.25rem 0; }
+
+    .lab-image {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    pre {
+      margin: 0.75rem 0 1.25rem;
+      padding: 1rem;
+      background: #0b0f14;
+      border: 2px solid #000;
+      border-radius: 10px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #e6edf3;
+      white-space: pre;
+    }
+
+    .code-python .comment  { color: #7ee787; }
+    .code-python .kw       { color: #ff7b72; font-weight: 600; }
+    .code-python .type     { color: #79c0ff; }
+    .code-python .str      { color: #a5d6ff; }
+    .code-python .num      { color: #d2a8ff; }
+
+    .eq-block {
+      background: #f0f4f8;
+      border-left: 4px solid #3498db;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      margin: 0.75rem 0 1rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.95rem;
+      color: #2c3e50;
+      overflow-x: auto;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 0.75rem 0 1.25rem;
+    }
+    @media (max-width: 600px) {
+      .image-grid { grid-template-columns: 1fr; }
+      section { padding: 1.25rem; }
+      header  { padding: 1.5rem 1rem; }
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem 1rem 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 10: Grid Localization</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+
+    <!-- -------------------- Overview -------------------- -->
+    <section id="overview">
+      <h2>Simulation Overview</h2>
+      <p>
+        This lab implements a Bayes filter for grid localization on a virtual robot, estimating pose on a discrete 12×9×18 grid spanning [-1.68, 1.98)m in x, [-1.37, 1.37)m in y, and [-180°, 180°) in heading, using odometry as the motion model and ToF sensor sweeps as the observation model. At each time step the filter runs a prediction step followed by a sensor update, with the belief argmax taken as the estimated pose. The mapper from Lab 9 precaches ray-traced observations at every grid cell, and the five functions below implement the discrete Bayes filter directly.
+      </p>
+    </section>
+
+    <!-- -------------------- compute_control -------------------- -->
+    <section id="compute-control">
+      <h2>compute_control</h2>
+      <p>
+        This function decomposes the displacement between two odometry poses into the three-parameter odometry motion model: an initial rotation to face the direction of travel, a translation, and a final rotation to match the new heading. All angles are normalized to [-180°, 180°) to avoid wrap-around issues during Gaussian evaluation.
+      </p>
+      <pre class="code-python"><code>
+<span class="kw">def</span> <span class="type">compute_control</span>(cur_pose, prev_pose):
+    dx = cur_pose[<span class="num">0</span>] - prev_pose[<span class="num">0</span>]
+    dy = cur_pose[<span class="num">1</span>] - prev_pose[<span class="num">1</span>]
+
+    delta_rot_1  = mapper.normalize_angle(
+                       np.degrees(np.arctan2(dy, dx)) - prev_pose[<span class="num">2</span>])
+    delta_trans  = np.sqrt(dx**<span class="num">2</span> + dy**<span class="num">2</span>)
+    delta_rot_2  = mapper.normalize_angle(
+                       cur_pose[<span class="num">2</span>] - prev_pose[<span class="num">2</span>] - delta_rot_1)
+
+    <span class="kw">return</span> delta_rot_1, delta_trans, delta_rot_2
+      </code></pre>
+    </section>
+
+    <!-- -------------------- odom_motion_model -------------------- -->
+    <section id="odom-motion-model">
+      <h2>odom_motion_model</h2>
+      <p>
+        Given a candidate transition from <em>prev_pose</em> to <em>cur_pose</em> and a measured control <em>u</em>, this function returns the probability p(x'|x, u) as the product of three independent Gaussians — one for each odometry parameter — using the noise sigmas defined in <em>world.yaml</em>.
+      </p>
+      <pre class="code-python"><code>
+<span class="kw">def</span> <span class="type">odom_motion_model</span>(cur_pose, prev_pose, u):
+    rot1_u, trans_u, rot2_u = u
+    rot1_act, trans_act, rot2_act = compute_control(cur_pose, prev_pose)
+
+    p_rot1  = loc.gaussian(mapper.normalize_angle(rot1_act  - rot1_u),
+                           <span class="num">0</span>, loc.odom_rot_sigma)
+    p_trans = loc.gaussian(trans_act - trans_u,
+                           <span class="num">0</span>, loc.odom_trans_sigma)
+    p_rot2  = loc.gaussian(mapper.normalize_angle(rot2_act  - rot2_u),
+                           <span class="num">0</span>, loc.odom_rot_sigma)
+
+    <span class="kw">return</span> p_rot1 * p_trans * p_rot2
+      </code></pre>
+    </section>
+
+    <!-- -------------------- prediction_step -------------------- -->
+    <section id="prediction-step">
+      <h2>prediction_step</h2>
+      <p>
+        The prediction step computes the prior belief <em>bel_bar</em> by marginalizing over all previous cells. For each previous cell with non-negligible belief, the motion model probability is accumulated into every candidate next cell. Skipping cells below a probability threshold avoids wasting time on contributions that round to zero.
+      </p>
+      <pre class="code-python"><code>
+<span class="kw">def</span> <span class="type">prediction_step</span>(cur_odom, prev_odom):
+    u = compute_control(cur_odom, prev_odom)
+    loc.bel_bar = np.zeros((mapper.MAX_CELLS_X,
+                            mapper.MAX_CELLS_Y,
+                            mapper.MAX_CELLS_A))
+
+    <span class="kw">for</span> cx <span class="kw">in</span> range(mapper.MAX_CELLS_X):
+        <span class="kw">for</span> cy <span class="kw">in</span> range(mapper.MAX_CELLS_Y):
+            <span class="kw">for</span> ca <span class="kw">in</span> range(mapper.MAX_CELLS_A):
+                <span class="kw">if</span> loc.bel[cx, cy, ca] &lt; <span class="num">0.0001</span>:
+                    <span class="kw">continue</span>
+                prev_pose = mapper.from_map(cx, cy, ca)
+                <span class="kw">for</span> nx <span class="kw">in</span> range(mapper.MAX_CELLS_X):
+                    <span class="kw">for</span> ny <span class="kw">in</span> range(mapper.MAX_CELLS_Y):
+                        <span class="kw">for</span> na <span class="kw">in</span> range(mapper.MAX_CELLS_A):
+                            cur_pose = mapper.from_map(nx, ny, na)
+                            p = odom_motion_model(cur_pose, prev_pose, u)
+                            loc.bel_bar[nx, ny, na] += p * loc.bel[cx, cy, ca]
+      </code></pre>
+    </section>
+
+    <!-- -------------------- sensor_model -------------------- -->
+    <section id="sensor-model">
+      <h2>sensor_model</h2>
+      <p>
+        For a given grid cell's precached observations, this function returns the per-reading likelihoods by evaluating a Gaussian centered on each true view with the robot's actual measurement. The <em>obs_range_data</em> column array is flattened to a 1D array before indexing to avoid a shape mismatch when assigning scalars into <em>prob_array</em>.
+      </p>
+      <pre class="code-python"><code>
+<span class="kw">def</span> <span class="type">sensor_model</span>(obs):
+    prob_array = np.zeros(mapper.OBS_PER_CELL)
+    obs_flat   = loc.obs_range_data.flatten()   <span class="comment"># (18,1) → (18,)</span>
+    <span class="kw">for</span> i <span class="kw">in</span> range(mapper.OBS_PER_CELL):
+        prob_array[i] = loc.gaussian(obs_flat[i], obs[i], loc.sensor_sigma)
+    <span class="kw">return</span> prob_array
+      </code></pre>
+    </section>
+
+    <!-- -------------------- update_step -------------------- -->
+    <section id="update-step">
+      <h2>update_step</h2>
+      <p>
+        The update step weights each cell's prior belief by the joint likelihood of all 18 sensor readings at that cell, then normalizes so the belief sums to one. The joint likelihood is the product of the 18 individual Gaussian probabilities returned by <em>sensor_model</em>.
+      </p>
+      <pre class="code-python"><code>
+<span class="kw">def</span> <span class="type">update_step</span>():
+    <span class="kw">for</span> cx <span class="kw">in</span> range(mapper.MAX_CELLS_X):
+        <span class="kw">for</span> cy <span class="kw">in</span> range(mapper.MAX_CELLS_Y):
+            <span class="kw">for</span> ca <span class="kw">in</span> range(mapper.MAX_CELLS_A):
+                obs   = mapper.get_views(cx, cy, ca)
+                p_z   = np.prod(sensor_model(obs))
+                loc.bel[cx, cy, ca] = p_z * loc.bel_bar[cx, cy, ca]
+
+    loc.bel /= np.sum(loc.bel)   <span class="comment"># normalize</span>
+      </code></pre>
+    </section>
+
+    <!-- -------------------- Results -------------------- -->
+    <section id="results">
+      <h2>Results</h2>
+      <p>
+        The filter was run over the full pre-planned trajectory. At each time step the belief argmax (blue) tracks ground truth (green) closely, while raw odometry (red) drifts noticeably over time. The two plots below compare the trajectory with and without the odometry overlay to make the localization accuracy clearer.
+      </p>
+
+      <div class="image-grid">
+        <img class="lab-image" src="../assets/images/GT_ODOM.png"    alt="Ground truth and odometry" />
+        <img class="lab-image" src="../assets/images/GT_NO_ODOM.png" alt="Ground truth without odometry" />
+      </div>
+
+      <h3>Demo</h3>
+      <p>
+        The video below shows the Bayes filter running in real time in the simulator, with the belief grid updating at every step.
+      </p>
+      <iframe
+        width="720" height="405"
+        src="https://www.youtube.com/embed/0sK5ZH6JQ4Q"
+        title="Grid Localization Demo"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        style="display:block; max-width:720px; width:100%; margin:0.75rem auto 1rem; border-radius:8px;">
+      </iframe>
+    </section>
+
+    <!-- -------------------- References -------------------- -->
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        I used AI assistance to help structure the write-up and check syntax.
+      </p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 10 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

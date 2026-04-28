@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 11: Localization (Real) - MAE 4190: Fast Robots</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    header p  { font-size: 1.1rem; opacity: 0.92; }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background: #fff;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+
+    section h3 {
+      margin-top: 1.25rem;
+      margin-bottom: 0.35rem;
+      color: #2c3e50;
+    }
+
+    p  { margin: 0.5rem 0 0.75rem; }
+    ul { margin: 0.25rem 0 0.75rem 1.25rem; }
+    li { margin: 0.25rem 0; }
+
+    .lab-image {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .placeholder {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 10px;
+      border: 2px dashed rgba(44,62,80,0.35);
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(44,62,80,0.05),
+        rgba(44,62,80,0.05) 10px,
+        rgba(44,62,80,0.08) 10px,
+        rgba(44,62,80,0.08) 20px
+      );
+      padding: 1.5rem 1.25rem;
+      color: #2c3e50;
+      text-align: center;
+    }
+    .placeholder p { margin: 0.2rem 0; font-size: 0.98rem; opacity: 0.85; }
+
+    pre {
+      margin: 0.75rem 0 1.25rem;
+      padding: 1rem;
+      background: #0b0f14;
+      border: 2px solid #000;
+      border-radius: 10px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #e6edf3;
+      white-space: pre;
+    }
+
+    .code-python .comment { color: #7ee787; }
+    .code-python .kw      { color: #ff7b72; font-weight: 600; }
+    .code-python .type    { color: #79c0ff; }
+    .code-python .str     { color: #a5d6ff; }
+    .code-python .num     { color: #d2a8ff; }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 0.75rem 0 1.25rem;
+    }
+    .image-grid .lab-image {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+    }
+    .image-grid-label {
+      text-align: center;
+      font-size: 0.88rem;
+      color: #555;
+      margin-top: 0.2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    @media (max-width: 600px) {
+      .image-grid { grid-template-columns: 1fr; }
+      section { padding: 1.25rem; }
+      header  { padding: 1.5rem 1rem; }
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem 1rem 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 11: Localization (Real)</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+
+    <!-- -------------------- Simulation -------------------- -->
+    <section id="simulation">
+      <h2>Localization in Simulation</h2>
+      <p>
+        I ran the Bayes filter update step in simulation first using lab11_sim.ipynb. The plot below shows odometry, ground truth, and belief. The belief tracks the ground truth closely, which confirmed the sensor model and grid setup were working before moving to the real robot.
+      </p>
+      <img class="lab-image" src="../assets/images/lab11_traj.png" alt="Simulation: odometry, ground truth, and belief" />
+    </section>
+
+    <!-- -------------------- Implementation -------------------- -->
+    <section id="implementation">
+      <h2>perform_observation_loop Implementation</h2>
+
+      <p>
+        The perform_observation_loop function triggers the SCAN case on the Artemis over BLE, waits for 18 readings to arrive, then packages them into the numpy arrays the filter expects. The command "19|20" sends 19 steps at 20 degrees each for one full rotation. Only the first 18 readings are used to match the filter's 18-bearing sensor model. I used only the tof1 sensor readings as the range input, since tof1 is the front-facing sensor and gives the most consistent wall returns across the full rotation.
+      </p>
+
+      <p>
+        The notification handler fills a shared buffer keyed by yaw, tof1, and tof2. The async loop polls the buffer every 100ms with a 60 second timeout, then converts distances from mm to meters before returning.
+      </p>
+
+      <pre class="code-python"><code>
+scan_buffer = {<span class="str">"yaw"</span>: [], <span class="str">"tof1"</span>: [], <span class="str">"tof2"</span>: []}
+
+<span class="kw">def</span> scan_notification_handler(uuid, bytes):
+    s = bytes.decode(<span class="str">"utf-8"</span>).strip()
+    <span class="kw">if not</span> s.startswith(<span class="str">"SCAN:"</span>):
+        <span class="kw">return</span>
+    <span class="kw">try</span>:
+        parts = s[len(<span class="str">"SCAN:"</span>):].split(<span class="str">","</span>)
+        <span class="kw">if</span> len(parts) != <span class="num">3</span>:
+            <span class="kw">return</span>
+        scan_buffer[<span class="str">"yaw"</span>].append(float(parts[<span class="num">0</span>]))
+        scan_buffer[<span class="str">"tof1"</span>].append(float(parts[<span class="num">1</span>]))
+        scan_buffer[<span class="str">"tof2"</span>].append(float(parts[<span class="num">2</span>]))
+        print(f<span class="str">"yaw={parts[0]}, tof1={parts[1]}, tof2={parts[2]}"</span>)
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        print(<span class="str">"Notification parse error:"</span>, s, e)
+
+
+<span class="kw">def</span> perform_observation_loop(self, rot_vel=<span class="num">120</span>):
+    <span class="kw">async def</span> _scan():
+        scan_buffer[<span class="str">"yaw"</span>].clear()
+        scan_buffer[<span class="str">"tof1"</span>].clear()
+        scan_buffer[<span class="str">"tof2"</span>].clear()
+
+        self.ble.start_notify(self.ble.uuid[<span class="str">'RX_STRING'</span>], scan_notification_handler)
+        self.ble.send_command(CMD.SCAN, <span class="str">"19|20"</span>)   <span class="comment"># 19 steps, 20 deg each</span>
+
+        timeout = <span class="num">60</span>
+        elapsed = <span class="num">0</span>
+        <span class="kw">while</span> len(scan_buffer[<span class="str">"tof1"</span>]) < <span class="num">18</span> <span class="kw">and</span> elapsed < timeout:
+            <span class="kw">await</span> asyncio.sleep(<span class="num">0.1</span>)
+            elapsed += <span class="num">0.1</span>
+
+        self.ble.stop_notify(self.ble.uuid[<span class="str">'RX_STRING'</span>])
+
+        <span class="kw">if</span> len(scan_buffer[<span class="str">"tof1"</span>]) < <span class="num">18</span>:
+            <span class="kw">raise</span> RuntimeError(
+                f<span class="str">"Only received {len(scan_buffer['tof1'])} readings before timeout"</span>
+            )
+
+        sensor_ranges   = np.array(scan_buffer[<span class="str">"tof1"</span>][:<span class="num">18</span>]).reshape(-<span class="num">1</span>, <span class="num">1</span>) / <span class="num">1000.0</span>
+        sensor_bearings = np.array(scan_buffer[<span class="str">"yaw"</span>][:<span class="num">18</span>]).reshape(-<span class="num">1</span>, <span class="num">1</span>)
+        <span class="kw">return</span> sensor_ranges, sensor_bearings
+
+    <span class="kw">return</span> asyncio.get_event_loop().run_until_complete(_scan())
+      </code></pre>
+
+      <p>
+        The SCAN command calls RPID at each step to rotate 20 degrees, averages 4 ToF readings per stop, and transmits each line as "SCAN:yaw,tof1,tof2". This is the exact same SCAN case from <a href="https://nrh46.github.io/portfolio/labs/lab9.html">Lab 9</a> with zero alterations. The notification handler appends into the shared buffer and perform_observation_loop waits on buffer length to know when the scan is complete.
+      </p>
+    </section>
+
+    <!-- -------------------- Position Results -------------------- -->
+    <section id="results">
+      <h2>Localization Results by Position</h2>
+
+      <p>
+        The update step was run once at each of the four marked poses. The green dot shows the filter belief and the blue dot shows the ground truth. The Lab 9 scan for the same physical location is shown alongside each result for reference.
+      </p>
+
+      <!-- Position (-3, -2) -->
+      <h3>Position (-3, -2)</h3>
+      <p>
+        This was the most consistently accurate result. The position is far from the box, so all 18 scan rays return clean wall reflections with no object interference. The belief landed at or very close to the correct cell on every run.
+      </p>
+      <div class="image-grid">
+        <div>
+          <img class="lab-image" src="../assets/images/Point Map: scan_2_-3_1.json.png" alt="Lab 9 scan at robot position (2,-3)" />
+          <p class="image-grid-label">Lab 9 scan, robot frame (2, -3)</p>
+        </div>
+        <div>
+          <img class="lab-image" src="../assets/images/loc_-3_-2.png" alt="Localization belief at (-3,-2)" />
+          <p class="image-grid-label">Bayes filter belief, world frame (-3, -2)</p>
+        </div>
+      </div>
+
+      <!-- Position (0, 3) -->
+      <h3>Position (0, 3)</h3>
+      <p>
+        This position was mostly correct with occasional failures. It sits closer to the box, so some scan angles return shorter readings off the object rather than the walls. This introduces enough ambiguity to occasionally pull the belief to the wrong cell.
+      </p>
+      <div class="image-grid">
+        <div>
+          <img class="lab-image" src="../assets/images/Point Map: scan_-3_0_1.json.png" alt="Lab 9 scan at robot position (-3,0)" />
+          <p class="image-grid-label">Lab 9 scan, robot frame (-3, 0)</p>
+        </div>
+        <div>
+          <img class="lab-image" src="../assets/images/loc_0_3_real.png" alt="Localization correct result at (0,3)" />
+          <p class="image-grid-label">Correct result, world frame (0, 3)</p>
+        </div>
+      </div>
+      <div class="image-grid">
+        <div></div>
+        <div>
+          <img class="lab-image" src="../assets/images/loc_0_3_fail.png" alt="Localization failed result at (0,3)" />
+          <p class="image-grid-label">Incorrect result, world frame (0, 3)</p>
+        </div>
+      </div>
+
+      <!-- Position (5, 3) -->
+      <h3>Position (5, 3)</h3>
+      <p>
+        This was harder to localize accurately. Multiple scan angles hit the box at short range, producing readings the wall-only sensor model cannot explain from the true pose, so the belief committed to a nearby wrong cell on both runs.
+      </p>
+      <div class="image-grid">
+        <div>
+          <img class="lab-image" src="../assets/images/Point Map: scan_-3_5_1.json.png" alt="Lab 9 scan at robot position (-3,5)" />
+          <p class="image-grid-label">Lab 9 scan, robot frame (-3, 5)</p>
+        </div>
+        <div>
+          <img class="lab-image" src="../assets/images/loc_5_3_fail.png" alt="Localization failed result at (5,3)" />
+          <p class="image-grid-label">Incorrect result, world frame (5, 3)</p>
+        </div>
+      </div>
+      <div class="image-grid">
+        <div></div>
+        <div>
+          <img class="lab-image" src="../assets/images/loc_5_3_fail2.png" alt="Localization second failed result at (5,3)" />
+          <p class="image-grid-label">Incorrect result, second run, world frame (5, 3)</p>
+        </div>
+      </div>
+
+      <!-- Position (5, -3) -->
+      <h3>Position (5, -3)</h3>
+      <p>
+        This position had the same difficulty as (5, 3). Proximity to the box caused the belief to land away from the true cell consistently.
+      </p>
+      <div class="image-grid">
+        <div>
+          <img class="lab-image" src="../assets/images/Point Map: scan_3_5_1.json.png" alt="Lab 9 scan at robot position (3,5)" />
+          <p class="image-grid-label">Lab 9 scan, robot frame (3, 5)</p>
+        </div>
+        <div>
+          <img class="lab-image" src="../assets/images/loc_5_-3_fail.png" alt="Localization failed result at (5,-3)" />
+          <p class="image-grid-label">Incorrect result, world frame (5, -3)</p>
+        </div>
+      </div>
+
+      <!-- Full map reference -->
+      <h3>Full Map Reference</h3>
+      <p>
+        The combined Lab 9 world-frame map below shows the box cluster clearly. Points from the (5, 3) and (5, -3) scan positions overlap heavily with the object geometry, which is why the filter struggles to uniquely identify those cells. Short object returns reduce the likelihood of the correct cell relative to nearby alternatives.
+      </p>
+      <img class="lab-image" src="../assets/images/Raw Point Map:  All 5 Point Scans.png" alt="Combined world frame map from Lab 9" />
+    </section>
+
+    <!-- -------------------- Discussion -------------------- -->
+    <section id="discussion">
+      <h2>Discussion</h2>
+      <p>
+        Localization accuracy tracked closely with distance from the box. Position (-3, -2) was consistently correct, (0, 3) was mostly correct, and (5, 3) and (5, -3) failed regularly. The box introduces scan readings the wall-only sensor model assigns low likelihood to from the true pose, which lets neighboring cells outscore the correct one. The left-right friction asymmetry noted in Lab 9 also causes the robot to drift slightly off-axis during each rotation, adding a small systematic heading error the filter cannot correct for.
+      </p>
+    </section>
+
+    <!-- -------------------- References -------------------- -->
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        I used AI assistance to help structure this write-up and check syntax.
+      </p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 11 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

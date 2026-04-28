@@ -173,7 +173,7 @@
       <h2>perform_observation_loop Implementation</h2>
 
       <p>
-        The perform_observation_loop function triggers the SCAN case on the Artemis over BLE, waits for 18 readings to arrive, then packages them into the numpy arrays the filter expects. The command "19|20" sends 19 steps at 20 degrees each for one full rotation. Only the first 18 readings are used to match the filter's 18-bearing sensor model. I used only the tof1 sensor readings as the range input, since tof1 is the front-facing sensor and gives the most consistent wall returns across the full rotation.
+        The perform_observation_loop function triggers the SCAN case on the Artemis over BLE, waits for 18 readings to arrive, then packages them into the numpy arrays the filter expects. The command "19|20" sends 19 steps at 20 degrees each for one full rotation. Only the first 18 readings are used to match the filter's 18-bearing sensor model. I used only the tof1 sensor readings as the range input, since tof1 is the front-facing sensor and working with that sensor exclusively gave me the best results for localization given the pre-made functions.
       </p>
 
       <p>
@@ -244,7 +244,7 @@ scan_buffer = {<span class="str">"yaw"</span>: [], <span class="str">"tof1"</spa
       <!-- Position (-3, -2) -->
       <h3>Position (-3, -2)</h3>
       <p>
-        This was the most consistently accurate result. The position is far from the box, so all 18 scan rays return clean wall reflections with no object interference. The belief landed at or very close to the correct cell on every run.
+        This was the most consistently accurate result. The position is far from the box. The belief landed at or very close to the correct cell on every run.
       </p>
       <div class="image-grid">
         <div>
@@ -260,7 +260,7 @@ scan_buffer = {<span class="str">"yaw"</span>: [], <span class="str">"tof1"</spa
       <!-- Position (0, 3) -->
       <h3>Position (0, 3)</h3>
       <p>
-        This position was mostly correct with occasional failures. It sits closer to the box, so some scan angles return shorter readings off the object rather than the walls. This introduces enough ambiguity to occasionally pull the belief to the wrong cell.
+        This position was mostly correct with occasional failures. It sits closer to the box, so some scan angles return shorter readings off the object rather than the walls. Since the object was difficult fo rthe sensors to detect as shown by the lab 9 scans, relying on those readings from the box made the localization less reliable. This introduces enough ambiguity to occasionally pull the belief to the wrong cell.
       </p>
       <div class="image-grid">
         <div>
@@ -283,7 +283,7 @@ scan_buffer = {<span class="str">"yaw"</span>: [], <span class="str">"tof1"</spa
       <!-- Position (5, 3) -->
       <h3>Position (5, 3)</h3>
       <p>
-        This was harder to localize accurately. Multiple scan angles hit the box at short range, producing readings the wall-only sensor model cannot explain from the true pose, so the belief committed to a nearby wrong cell on both runs.
+        This was harder to localize accurately. Multiple scan angles hit the box at short range, producing readings the sensor model cannot explain from the true pose, so the belief committed to a nearby wrong cell on both runs.
       </p>
       <div class="image-grid">
         <div>
@@ -331,7 +331,7 @@ scan_buffer = {<span class="str">"yaw"</span>: [], <span class="str">"tof1"</spa
     <section id="discussion">
       <h2>Discussion</h2>
       <p>
-        Localization accuracy tracked closely with distance from the box. Position (-3, -2) was consistently correct, (0, 3) was mostly correct, and (5, 3) and (5, -3) failed regularly. The box introduces scan readings the wall-only sensor model assigns low likelihood to from the true pose, which lets neighboring cells outscore the correct one. The left-right friction asymmetry noted in Lab 9 also causes the robot to drift slightly off-axis during each rotation, adding a small systematic heading error the filter cannot correct for.
+        Localization accuracy tracked closely with distance from the box. Position (-3, -2) was consistently correct, (0, 3) was mostly correct, and (5, 3) and (5, -3) failed regularly. The box introduces scan readings the sensor model assigns low likelihood to from the true pose, which lets neighboring cells outscore the correct one. The left-right friction asymmetry noted in Lab 9 also causes the robot to drift slightly off-axis during each rotation, adding a small systematic heading error the filter cannot correct for.
       </p>
     </section>
 

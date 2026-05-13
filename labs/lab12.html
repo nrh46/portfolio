@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 12: Path Planning and Execution - MAE 4190: Fast Robots</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.65;
+      color: #333;
+      background-color: #f5f5f5;
+      overflow-x: hidden;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    header p  { font-size: 1.1rem; opacity: 0.92; }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background: #fff;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    section h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+
+    section h3 {
+      margin-top: 1.25rem;
+      margin-bottom: 0.35rem;
+      color: #2c3e50;
+    }
+
+    p  { margin: 0.5rem 0 0.75rem; }
+    ul { margin: 0.25rem 0 0.75rem 1.25rem; }
+    li { margin: 0.25rem 0; }
+
+    .lab-image {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .placeholder {
+      width: 100%;
+      max-width: 720px;
+      margin: 0.75rem auto 1rem;
+      border-radius: 10px;
+      border: 2px dashed rgba(44,62,80,0.35);
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(44,62,80,0.05),
+        rgba(44,62,80,0.05) 10px,
+        rgba(44,62,80,0.08) 10px,
+        rgba(44,62,80,0.08) 20px
+      );
+      padding: 1.5rem 1.25rem;
+      color: #2c3e50;
+      text-align: center;
+    }
+    .placeholder p { margin: 0.2rem 0; font-size: 0.98rem; opacity: 0.85; }
+
+    pre {
+      margin: 0.75rem 0 1.25rem;
+      padding: 1rem;
+      background: #0b0f14;
+      border: 2px solid #000;
+      border-radius: 10px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #e6edf3;
+      white-space: pre;
+    }
+
+    .code-arduino .comment { color: #7ee787; }
+    .code-arduino .kw      { color: #ff7b72; font-weight: 600; }
+    .code-arduino .type    { color: #79c0ff; }
+    .code-arduino .str     { color: #a5d6ff; }
+    .code-arduino .num     { color: #d2a8ff; }
+
+    .code-python .comment { color: #7ee787; }
+    .code-python .kw      { color: #ff7b72; font-weight: 600; }
+    .code-python .type    { color: #79c0ff; }
+    .code-python .str     { color: #a5d6ff; }
+    .code-python .num     { color: #d2a8ff; }
+
+    .video-wrap {
+      max-width: 720px;
+      margin: 0.75rem auto 1.25rem;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      position: relative;
+      padding-top: 56.25%;
+    }
+    .video-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem 1rem 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      section { padding: 1.25rem; }
+      header  { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Lab 12: Path Planning and Execution</h1>
+    <p>MAE 4190: Fast Robots</p>
+  </header>
+
+  <main>
+
+    <!-- -------------------- Goal -------------------- -->
+    <section id="goal">
+      <h2>Goal</h2>
+      <p>
+        The goal of this lab was to navigate a robot through nine waypoints in the lab map using a combination of onboard closed-loop control and offboard Bayes filter localization. The robot rotates to face each waypoint using RPID, drives the computed distance using a Kalman filter assisted PID controller, and re-localizes at selected waypoints to correct accumulated error.
+      </p>
+      <p>
+        The waypoints in feet were: (-4, -3), (-2, -1), (1, -1), (2, -3), (5, -3), (5, -2), (5, 3), (0, 3), and (0, 0).
+      </p>
+    </section>
+
+    <!-- -------------------- Robot Adaptation -------------------- -->
+    <section id="robot">
+      <h2>Working with a Different Robot</h2>
+      <p>
+        My robot broke at the EXPO prior to this lab, so I completed Lab 12 using JT's robot. This required several adaptations before any navigation code could run. The drive pin assignments were different, so I had to overwrite all motor control functions. JT's wheel offset between left and right motors also changed constantly across trials due to hardware inconsistency, which made dialing in turning accuracy difficult between runs.
+      </p>
+      <p>
+        The Kalman filter matrices also had to be recalculated from a new step response on JT's robot, since the drag and mass parameters depend on the specific hardware. I also adjusted the RPID gains to match the new robot's turning behavior. The sigma values for the Kalman filter were changed as well, with sigma_u updated to 2500 and sigma_z updated to 1000, reflecting the higher uncertainty in the new robot's dynamics.
+      </p>
+    </section>
+
+    <!-- -------------------- DRIVE_DIST -------------------- -->
+    <section id="drive-dist">
+      <h2>DRIVE_DIST Arduino Case</h2>
+      <p>
+        I wrote a DRIVE_DIST case to drive the robot a specified distance in millimeters. The case takes a runtime in milliseconds and a target distance in millimeters. It seeds the Kalman filter from the first ToF reading, then runs a proportional controller using the KF position estimate to track how far the robot has travelled from its starting position. I chose to operate at low PWM values since the robot was significantly more reliable in that range. The case sends a DRIVE_DONE acknowledgment back over BLE with the final KF and raw travelled distances when it finishes.
+      </p>
+
+      <details style="margin: 0.75rem 0 1.25rem; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+        <summary style="cursor: pointer; padding: 0.75rem 1rem; background: #2c3e50; color: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.95rem; list-style: none; display: flex; align-items: center; justify-content: space-between; user-select: none;">
+          <span>case DRIVE_DIST</span>
+          <span style="font-size: 0.8rem; opacity: 0.8;">click to expand</span>
+        </summary>
+      <pre style="margin:0; border-radius:0; border:none;" class="code-arduino"><code>
+<span class="kw">case</span> DRIVE_DIST: {
+    <span class="type">int</span> runtime_ms     = <span class="num">8000</span>;
+    <span class="type">int</span> target_dist_mm = <span class="num">300</span>;
+
+    <span class="kw">if</span> (!robot_cmd.get_next_value(runtime_ms))     <span class="kw">break</span>;
+    <span class="kw">if</span> (!robot_cmd.get_next_value(target_dist_mm)) <span class="kw">break</span>;
+    <span class="kw">if</span> (target_dist_mm <= <span class="num">0</span> || runtime_ms <= <span class="num">0</span>)    <span class="kw">break</span>;
+
+    <span class="kw">const</span> <span class="type">float</span> KP_DIST     = <span class="num">0.20f</span>;
+    <span class="kw">const</span> <span class="type">int</span>   PWM_MAX     = <span class="num">55</span>;
+    <span class="kw">const</span> <span class="type">int</span>   PWM_MIN_FWD = <span class="num">45</span>;
+    <span class="kw">const</span> <span class="type">int</span>   PWM_MIN_REV = <span class="num">35</span>;
+    <span class="kw">const</span> <span class="type">float</span> DEADBAND_MM = <span class="num">40.0f</span>;
+
+    Matrix<<span class="num">2</span>,<span class="num">2</span>> lkf_sigma = {<span class="num">100.0f</span>, <span class="num">0.0f</span>, <span class="num">0.0f</span>, <span class="num">100.0f</span>};
+    Matrix<<span class="num">2</span>,<span class="num">1</span>> lkf_mu    = {<span class="num">0.0f</span>, <span class="num">0.0f</span>};
+
+    tof1.setDistanceModeLong();
+    tof1.startRanging();
+
+    <span class="type">unsigned long</span> seed_deadline = millis() + <span class="num">400</span>;
+    <span class="kw">while</span> (!tof1.checkForDataReady() && millis() < seed_deadline) { delay(<span class="num">1</span>); }
+
+    <span class="kw">if</span> (!tof1.checkForDataReady()) {
+        tof1.stopRanging();
+        tx_estring_value.clear();
+        tx_estring_value.append(<span class="str">"DRIVE_DONE:0,0"</span>);
+        tx_characteristic_string.writeValue(tx_estring_value.c_str());
+        <span class="kw">break</span>;
+    }
+
+    <span class="type">int</span> baseline_tof = tof1.getDistance();
+    tof1.clearInterrupt();
+    lkf_mu(<span class="num">0</span>, <span class="num">0</span>) = (<span class="type">float</span>)baseline_tof;
+    lkf_mu(<span class="num">1</span>, <span class="num">0</span>) = <span class="num">0.0f</span>;
+    <span class="type">int</span> last_raw_tof = baseline_tof;
+
+    <span class="type">unsigned long</span> loop_start   = millis();
+    <span class="type">int</span>           last_pwm_drv = <span class="num">0</span>;
+    <span class="type">float</span> kf_travelled_mm  = <span class="num">0.0f</span>;
+    <span class="type">float</span> raw_travelled_mm = <span class="num">0.0f</span>;
+
+    <span class="kw">while</span> (millis() - loop_start < (<span class="type">unsigned long</span>)runtime_ms) {
+
+        Matrix<<span class="num">1</span>,<span class="num">1</span>> kf_u    = { (<span class="type">float</span>)last_pwm_drv / <span class="num">100.0f</span> };
+        Matrix<<span class="num">2</span>,<span class="num">1</span>> mu_p    = Ad * lkf_mu    + Bd * kf_u;
+        Matrix<<span class="num">2</span>,<span class="num">2</span>> sigma_p = Ad * lkf_sigma * ~Ad + su;
+
+        <span class="type">bool</span> tof_ready = tof1.checkForDataReady();
+        <span class="type">int</span>  tof_value = <span class="num">0</span>;
+
+        <span class="kw">if</span> (tof_ready) {
+            tof_value    = tof1.getDistance();
+            last_raw_tof = tof_value;
+            tof1.clearInterrupt();
+            tof1.stopRanging();
+            tof1.startRanging();
+
+            Matrix<<span class="num">1</span>,<span class="num">1</span>> kf_y    = { (<span class="type">float</span>)tof_value };
+            Matrix<<span class="num">1</span>,<span class="num">1</span>> sigma_m = C * sigma_p * ~C + sz;
+            Matrix<<span class="num">2</span>,<span class="num">1</span>> K       = sigma_p * ~C * Inverse(sigma_m);
+            Matrix<<span class="num">1</span>,<span class="num">1</span>> y_m     = kf_y - C * mu_p;
+            Matrix<<span class="num">2</span>,<span class="num">2</span>> I2;
+            I2.Fill(<span class="num">0</span>); I2(<span class="num">0</span>,<span class="num">0</span>) = <span class="num">1.0f</span>; I2(<span class="num">1</span>,<span class="num">1</span>) = <span class="num">1.0f</span>;
+            lkf_mu    = mu_p + K * y_m;
+            lkf_sigma = (I2 - K * C) * sigma_p;
+        } <span class="kw">else</span> {
+            lkf_mu    = mu_p;
+            lkf_sigma = sigma_p;
+        }
+
+        <span class="type">float</span> kf_dist      = lkf_mu(<span class="num">0</span>, <span class="num">0</span>);
+        kf_travelled_mm    = (<span class="type">float</span>)baseline_tof - kf_dist;
+        raw_travelled_mm   = (<span class="type">float</span>)baseline_tof - (<span class="type">float</span>)last_raw_tof;
+
+        <span class="type">float</span> kf_remaining  = (<span class="type">float</span>)target_dist_mm - kf_travelled_mm;
+        <span class="type">float</span> raw_remaining = (<span class="type">float</span>)target_dist_mm - raw_travelled_mm;
+
+        <span class="kw">if</span> (fabsf(kf_remaining) <= DEADBAND_MM) { <span class="kw">break</span>; }
+        <span class="kw">if</span> (fabsf(raw_remaining) <= <span class="num">0.0f</span> &&
+            fabsf(kf_remaining)  <= DEADBAND_MM * <span class="num">2.0f</span>) { <span class="kw">break</span>; }
+
+        <span class="type">int</span> pwm_val = (<span class="type">int</span>)(KP_DIST * fabsf(kf_remaining));
+
+        <span class="kw">if</span> (kf_remaining > <span class="num">0.0f</span>) {
+            <span class="kw">if</span> (pwm_val > PWM_MAX)     pwm_val = PWM_MAX;
+            <span class="kw">if</span> (pwm_val < PWM_MIN_FWD) pwm_val = PWM_MIN_FWD;
+            car.fwd(pwm_val);
+            last_pwm_drv = pwm_val;
+        } <span class="kw">else</span> {
+            <span class="kw">if</span> (pwm_val > PWM_MAX)     pwm_val = PWM_MAX;
+            <span class="kw">if</span> (pwm_val < PWM_MIN_REV) pwm_val = PWM_MIN_REV;
+            car.back(pwm_val);
+            last_pwm_drv = -pwm_val;
+        }
+    }
+
+    car.kill();
+    tof1.stopRanging();
+
+    <span class="kw">break</span>;
+}
+      </code></pre>
+      </details>
+    </section>
+
+    <!-- -------------------- Python Overview -------------------- -->
+    <section id="python">
+      <h2>Python Navigation Architecture</h2>
+
+      <p>
+        Navigation was handled entirely offboard in Python through two classes: RealRobot and Navigator. The overall loop for each waypoint was: scan to collect 18 ToF readings, run the Bayes filter update step to localize, compute the heading and distance to the next waypoint, rotate using RPID, then drive using DRIVE_DIST. Waypoints were stored in feet and converted to millimeters for all BLE communication with the robot.
+      </p>
+
+      <h3>RealRobot</h3>
+      <p>
+        RealRobot wraps the three robot actions needed for navigation. perform_observation_loop triggers the SCAN case and returns sensor ranges and bearings for the Bayes filter. rotate sends a ROT_PID command and waits for a ROT_PID_DONE acknowledgment before returning. drive_distance sends a DRIVE_DIST command and waits for the DRIVE_DONE acknowledgment, which carries back the final KF and raw travelled distances. All three functions block until the robot acknowledges completion or a timeout fires.
+      </p>
+
+      <h3>Navigator</h3>
+      <p>
+        Navigator holds the waypoint list and the LOCALIZE_AT set, which specifies which waypoints get a full scan and Bayes update. For this run, localization was performed at waypoints 0, 2, 6, and 8. All other waypoints used dead-reckoning, where the robot assumed it reached the ideal position and continued from there.
+      </p>
+      <p>
+        The localize method initializes a uniform grid belief, optionally weights the heading dimension using the robot's current estimated heading, then calls the Bayes filter update step and records the MAP cell position and probability. The navigate_to method computes the heading delta and distance from the current belief pose to the target waypoint. Large rotations are broken into a series of 20 degree increments ending in a final turn between 20 and 40 degrees. This was done because small RPID turns were significantly more accurate than large ones. After all sub-rotations complete, drive_distance is called with the computed distance in millimeters.
+      </p>
+      <p>
+        The run method loops through all waypoints in order, calling navigate_to then either localize or the dead-reckoning path for each stop, and logs every belief position for the final path plot.
+      </p>
+    </section>
+
+    <!-- -------------------- Troubleshooting -------------------- -->
+    <section id="trials">
+      <h2>Troubleshooting and Trial Process</h2>
+
+      <p>
+        Getting the navigation working required significant iteration. The main challenges were turn accuracy, localization reliability near the box, and the inconsistency of JT's robot across trials.
+      </p>
+
+      <p>
+        Trial 1 used a rotation sigma of 15 degrees for the heading prior. This produced wild localization results and cascading errors in the navigation calculations. Reducing the rotation sigma to 5 degrees in Trial 2 improved localization substantially. I also changed the filter to restart with a fresh uniform prior at each waypoint rather than weighting the previous belief, since carrying forward a bad prior was compounding error across steps. Trial 2 produced much better navigation calculations, visible in the Python output after each turn, but the robot made a turn far beyond the intended angle. I cancelled the run to avoid a wall collision.
+      </p>
+
+      <p>
+        Trial 3 attempted a blend filter that gave more weight to the waypoint target the further the new belief was from it, to reduce the impact of bad localizations near the box obstacle. This did not work and was abandoned after one attempt.
+      </p>
+
+      <p>
+        Trial 4 introduced the sub-rotation strategy, breaking all turns into 20 degree increments. This significantly improved turn precision and became a permanent part of the approach.
+      </p>
+
+      <p>
+        Trial 5 limited localization to waypoints 0, 2, 7, and 8 only. The robot used dead-reckoning between those points. This found some success but produced large position errors at a few waypoints, with the robot driving along the wall at one point.
+      </p>
+
+      <p>
+        Trial 6 added waypoint 6 to the localization set. This worked reasonably well overall, with a localization failure at (0, 3) as the main remaining issue. This trial produced the best run captured on video and shown below.
+      </p>
+    </section>
+
+    <!-- -------------------- Best Run -------------------- -->
+    <section id="best-run">
+      <h2>Best Run</h2>
+
+      <p>
+        The path plot below shows the believed path versus the ideal route for the best run. Orange squares mark localized positions and open diamonds mark dead-reckoned positions. Red arrows show the error vector from each belief position to the corresponding ideal waypoint. The error bar chart on the right shows per-waypoint position error in feet, with grey bars indicating dead-reckoned waypoints. Localized waypoints 0 and 2 were within 1 foot of the true position. Waypoint 6 at (5, 3) had roughly 2.2 feet of error, and waypoints 7 and 8 had larger errors at 5.1 and 3.6 feet respectively. The mean error across localized waypoints was 2.6 feet. The larger errors at waypoints 7 and 8 are consistent with the localization difficulty near the box obstacle noted in Lab 11, and with accumulated drift from the dead-reckoned middle segment.
+      </p>
+
+      <img class="lab-image" src="../assets/images/lab12_path_somewhatAccurate.png" alt="Lab 12 believed path vs ideal route" />
+
+      <h3>Physical Run Video</h3>
+      <p>
+        The video below shows the robot executing the navigation run in the lab.
+      </p>
+      <div class="video-wrap">
+        <iframe
+          src="https://www.youtube.com/embed/MOm48X07dXg"
+          title="Lab 12 physical run"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <h3>Localization Visualization Video</h3>
+      <p>
+        The video below shows the robot's localized belief positions updating in real time in the plotter during the same run. Localization only fires at waypoints 0, 2, 6, and 8.
+      </p>
+      <div class="video-wrap">
+        <iframe
+          src="https://www.youtube.com/embed/sISe-ZHdBXI"
+          title="Lab 12 localization visualization"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </section>
+
+    <!-- -------------------- References -------------------- -->
+    <section id="references">
+      <h2>References</h2>
+      <p>
+        I used JT's robot for this lab with his permission due to my robot breaking at the EXPO. I used AI assistance to help structure this write-up and check syntax.
+      </p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://nrh46.github.io/portfolio/labs/labs_home.html">← Back to Labs Index</a>
+    </p>
+    <p>Spring 2026 Lab 12 - MAE 4190: Fast Robots</p>
+  </footer>
+</body>
+</html>

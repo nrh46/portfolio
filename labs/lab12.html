@@ -177,7 +177,7 @@
     <section id="robot">
       <h2>Working with a Different Robot</h2>
       <p>
-        My robot broke at the EXPO prior to this lab, so I completed Lab 12 using JT's robot. This required several adaptations before any navigation code could run. The drive pin assignments were different, so I had to overwrite all motor control functions. JT's wheel offset between left and right motors also changed constantly across trials due to hardware inconsistency, which made dialing in turning accuracy difficult between runs.
+        My robot broke at the EXPO prior to this lab, so I completed Lab 12 using Jamison Taylor's robot. Professor Helbling and I worked through troubleshooting my robot together and were able to narrow the issue down to the left motor driver, but could not determine the root cause since the wiring looked correct on inspection. With the lab deadline approaching I moved to JT's hardware instead. This required several adaptations before any navigation code could run. The drive pin assignments were different, so I had to overwrite all motor control functions. JT's wheel offset between left and right motors also changed constantly across trials, as varying battery levels changed the motor dynamics between runs, making it difficult to dial in turning accuracy consistently.
       </p>
       <p>
         The Kalman filter matrices also had to be recalculated from a new step response on JT's robot, since the drag and mass parameters depend on the specific hardware. I also adjusted the RPID gains to match the new robot's turning behavior. The sigma values for the Kalman filter were changed as well, with sigma_u updated to 2500 and sigma_z updated to 1000, reflecting the higher uncertainty in the new robot's dynamics.
@@ -318,7 +318,7 @@
 
       <h3>Navigator</h3>
       <p>
-        Navigator holds the waypoint list and the LOCALIZE_AT set, which specifies which waypoints get a full scan and Bayes update. For this run, localization was performed at waypoints 0, 2, 6, and 8. All other waypoints used dead-reckoning, where the robot assumed it reached the ideal position and continued from there.
+        Navigator holds the waypoint list and the LOCALIZE_AT set, which specifies which waypoints get a full scan and Bayes update. For the best run shown below, localization was performed at waypoints 0, 2, 6, 7, and 8. All other waypoints used dead-reckoning, where the robot assumed it reached the ideal position and continued from there.
       </p>
       <p>
         The localize method initializes a uniform grid belief, optionally weights the heading dimension using the robot's current estimated heading, then calls the Bayes filter update step and records the MAP cell position and probability. The navigate_to method computes the heading delta and distance from the current belief pose to the target waypoint. Large rotations are broken into a series of 20 degree increments ending in a final turn between 20 and 40 degrees. This was done because small RPID turns were significantly more accurate than large ones. After all sub-rotations complete, drive_distance is called with the computed distance in millimeters.
@@ -333,7 +333,7 @@
       <h2>Troubleshooting and Trial Process</h2>
 
       <p>
-        Getting the navigation working required significant iteration. The main challenges were turn accuracy, localization reliability near the box, and the inconsistency of JT's robot across trials.
+        Getting the navigation working required significant iteration. The main challenges were turn accuracy, localization reliability near the box, and the fact that my navigation code was originally written and tuned for my own robot. Running it on a robot with slightly different dynamics and hardware setup meant that gain values, minimum PWM thresholds, and timing assumptions needed re-tuning, and the behaviour was not always consistent across trials as a result.
       </p>
 
       <p>
@@ -362,7 +362,7 @@
       <h2>Best Run</h2>
 
       <p>
-        The path plot below shows the believed path versus the ideal route for the best run. Orange squares mark localized positions and open diamonds mark dead-reckoned positions. Red arrows show the error vector from each belief position to the corresponding ideal waypoint. The error bar chart on the right shows per-waypoint position error in feet, with grey bars indicating dead-reckoned waypoints. Localized waypoints 0 and 2 were within 1 foot of the true position. Waypoint 6 at (5, 3) had roughly 2.2 feet of error, and waypoints 7 and 8 had larger errors at 5.1 and 3.6 feet respectively. The mean error across localized waypoints was 2.6 feet. The larger errors at waypoints 7 and 8 are consistent with the localization difficulty near the box obstacle noted in Lab 11, and with accumulated drift from the dead-reckoned middle segment.
+        The path plot below shows the believed path versus the ideal route for the best run. Orange squares mark localized positions and open diamonds mark dead-reckoned positions. Red arrows show the error vector from each belief position to the corresponding ideal waypoint. The error bar chart on the right shows per-waypoint position error in feet, with grey bars indicating dead-reckoned waypoints. Localized waypoints 0 and 2 were within 1 foot of the true position. Waypoint 6 at (5, 3) had roughly 2.2 feet of error, and waypoints 7 and 8 had larger errors at 5.1 and 3.6 feet respectively. The mean error across localized waypoints was 2.6 feet. The larger errors at waypoints 7 and 8 are consistent with the localization difficulty near the box obstacle noted in Lab 11, but were also likely caused by overrun on the DRIVE_DIST function between waypoints 5 and 6, which pushed the robot very close to the wall. That positional error carried forward into the subsequent dead-reckoned legs and compounded by the time the robot reached waypoints 7 and 8.
       </p>
 
       <img class="lab-image" src="../assets/images/lab12_path_somewhatAccurate.png" alt="Lab 12 believed path vs ideal route" />
